@@ -565,7 +565,7 @@ body{background:radial-gradient(1200px 560px at 50% -140px,rgba(46,86,200,.26),t
       <article class="dc" id="dc" data-state="pending">
         <div class="sec-h dc-head"><h2 id="h-needs">Needs you</h2><span class="count" id="needs-n">1</span></div>
         <div class="dc-top"><span><i class="ag"></i>Cloud agent <span data-show="pending" data-inline>asks</span></span>
-          <span class="dc-clock" data-show="pending" data-inline><span id="dc-clock-l">next download in </span><b id="dc-clock">01:28</b></span></div>
+          <span class="dc-clock" data-show="pending" data-inline><span id="dc-clock-l">your call within </span><b id="dc-clock">01:28</b></span></div>
         <h3 class="dc-title">Revoke all active sessions of role <code>ci-deployer</code><span data-show="pending" data-inline>?</span></h3>
 
         <div data-show="pending">
@@ -754,8 +754,8 @@ var $=function(s,r){return (r||document).querySelector(s)};
 var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
 function pad(n){return (n<10?'0':'')+n}
 function mmss(s){return pad(Math.floor(s/60))+':'+pad(s%60)}
-var GRACE=10; /* seconds the attacker is overdue before the download actually starts */
-function paintDcClock(){var o=S.left<=0;$('#dc-clock-l').textContent=o?'download could start any moment':'next download in ';var b=$('#dc-clock');b.hidden=o;b.textContent=o?'':mmss(S.left);}
+var GRACE=3; /* seconds 'Acting now…' shows before the block lands */
+function paintDcClock(){var o=S.left<=0;$('#dc-clock-l').textContent=o?'acting now…':'your call within ';var b=$('#dc-clock');b.hidden=o;b.textContent=o?'':mmss(S.left);}
 function hms(t){var s=2*3600+14*60+t;return pad(Math.floor(s/3600))+':'+pad(Math.floor(s%3600/60))+':'+pad(s%60)}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
 
@@ -780,7 +780,7 @@ function renderBand(){
     h='Active attack. Partly contained.';
     if(S.decision==='declined'){t='You declined the revoke. The attacker’s session stays live until 02:59, and I’m watching every call it makes.';l='Session valid until';v='02:59';}
     else if(S.decision==='snoozed'){t='Waiting for the prod deploy before the revoke. I’ll ask again at 02:27, or the moment the download starts.';l='Asking again at';v='02:27';}
-    else{t='A stolen AWS key is disabled, but the attacker still holds a live session and is lining up 4.1 GB of customer exports. One decision needs you.';if(S.left>0){l='Next attacker move in';v=mmss(S.left);s='Estimated start of the 4.1 GB download';}else{l='Next attacker move';v='Any moment now';s='Past the estimated start of the 4.1 GB download';}}
+    else{t='A stolen AWS key is disabled, but the attacker still holds a live session and is lining up 4.1 GB of customer exports. One decision needs you.';if(S.left>0){l='Your call within';v=mmss(S.left);s='Then I block their network on my own';}else{l='No answer';v='Acting now…';s='Blocking their network on my own';}}
   }else if(p==='exec'){
     h='Cutting the attacker off.';t='Approved by Igor at 02:21:14. '+(S.execOpt==='revoke'?'Revoking every session of ci-deployer.':'Blocking the attacker’s network on ci-deployer.');
   }else if(p==='contained'){
