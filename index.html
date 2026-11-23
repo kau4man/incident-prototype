@@ -495,7 +495,7 @@ body{background:radial-gradient(1200px 560px at 50% -140px,rgba(46,86,200,.26),t
 /* verdict as a card; clock times live at the end of the headline */
 .band{width:calc(100% - 64px);max-width:1416px;margin:16px auto;border-radius:12px;padding:26px 32px 28px;padding-inline:32px}
 .band h1 .h-time{white-space:nowrap;font-weight:400;opacity:.55;font-variant-numeric:tabular-nums}
-.band h1 .h-time::before{content:"·";display:inline-block;margin:0 .26em 0 0;transform:translateY(-.1em)}
+.band h1 .h-time::before{content:"·";margin:0 .3em}
 @media (max-width:1180px){.band{width:calc(100% - 32px);padding-inline:24px}}
 @media (max-width:860px){.band{padding:20px;border-radius:12px}}
 </style>
@@ -795,7 +795,7 @@ function renderBand(){
   $('#band-e').textContent={hot:'Active attack · INC-48213',exec:'Responding',contained:'Contained',holding:'Holding the line',morning:'Case closed'}[p];
   var cd=(p==='hot'&&S.decision!=='declined'&&S.decision!=='snoozed');
   var bh=$('#band-h');bh.textContent=h.replace(/\.$/,'');
-  if(!cd&&v){var ht=document.createElement('span');ht.className='h-time';ht.title=l;ht.textContent=v+(s?' '+s:'');bh.appendChild(document.createTextNode(' '));bh.appendChild(ht);}
+  if(!cd&&v){var ht=document.createElement('span');ht.className='h-time';ht.title=l;ht.textContent=v+(s?' '+s:'');bh.appendChild(document.createElement('wbr'));bh.appendChild(ht);}
   $('#band-p').textContent=t;
   $('.band-aside').hidden=!cd;
   $('#band-l').textContent=cd?l:'';$('#band-v').textContent=cd?v:'';$('#band-s').textContent=cd?s:'';
