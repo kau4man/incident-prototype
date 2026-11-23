@@ -799,14 +799,14 @@ function renderBand(){
     else{hv='02:21';t='The attacker’s network is blocked on ci-deployer, so their calls fail for now. That holds until they switch address, and their session expires at 02:59 anyway. The full revoke is staged.';}
   }else{
     var n=Object.keys(S.signed).length;
-    h=n>=5?'Closed and signed off.':'Contained in 7 minutes.';
+    h=n>=5?'Closed and signed off.':'Closed. Contained in 7 minutes.';
     t='338 MB of customer exports left the bucket; nothing else was touched. '+(n>=5?'Everything is signed. The report goes out at 09:30.':'Five drafts wait for your sign-off.');hl='Closed at';pre='closed at ';hv='02:31';
   }
   document.body.setAttribute('data-phase',p);
   $('#band-e').textContent={hot:'Active attack · INC-48213',exec:'Responding',contained:'Contained',holding:'Holding the line',morning:'Case closed'}[p];
   var cd=(p==='hot'&&S.decision!=='declined'&&S.decision!=='snoozed')||(p==='holding'&&S.decision==='expired'&&!S.escalated);
   var bh=$('#band-h');bh.textContent=h.replace(/\.$/,'');
-  if(hv){var ht=document.createElement('span');ht.className='h-time'+(nodot?' pre':'');ht.title=hl;ht.textContent=pre+hv;bh.appendChild(document.createTextNode(nodot?' ':''));if(!nodot)bh.appendChild(document.createElement('wbr'));bh.appendChild(ht);}
+  
   $('#band-p').textContent=t;
   $('.band-aside').hidden=!cd;$('.band-aside').classList.toggle('overdue',cd&&p==='hot'&&S.left<=0);
   $('#band-l').textContent=cd?l:'';$('#band-v').textContent=cd?v:'';$('#band-s').textContent=cd?s:'';
