@@ -780,7 +780,7 @@ function renderBand(){
   }
   document.body.setAttribute('data-phase',p);
   $('#band-e').textContent={hot:'Active attack · INC-48213',exec:'Responding',contained:'Contained',holding:'Holding the line',morning:'Case closed'}[p];
-  $('#band-h').textContent=h;$('#band-p').textContent=t;$('#band-l').textContent=l;$('#band-v').textContent=v;$('#band-s').textContent=s;
+  $('#band-h').textContent=h.replace(/\.$/,'');$('#band-p').textContent=t;$('#band-l').textContent=l;$('#band-v').textContent=v;$('#band-s').textContent=s;
 }
 
 /* ---------- story + evidence ---------- */
