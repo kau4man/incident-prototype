@@ -510,7 +510,7 @@ body{background:radial-gradient(1200px 560px at 50% -140px,rgba(46,86,200,.26),t
     <button type="button" data-jump="contained" aria-pressed="false"><b>02:25</b>Contained</button>
     <button type="button" data-jump="morning" aria-pressed="false"><b>09:00</b>Morning</button>
   </div>
-  <button type="button" class="proto-help" data-open="help" lang="ru">Что попробовать</button>
+  <button type="button" class="proto-help" data-open="help">What to try</button>
 </div>
 
 <header class="top">
@@ -706,21 +706,21 @@ body{background:radial-gradient(1200px 560px at 50% -140px,rgba(46,86,200,.26),t
   <dl class="dlg-b brief" id="brief-body"></dl>
 </dialog>
 
-<!-- help (prototype chrome, Russian) -->
-<dialog id="help" aria-labelledby="h-help" lang="ru">
-  <div class="dlg-h"><h2 id="h-help">Что попробовать</h2><button type="button" class="x" data-close>Закрыть</button></div>
+<!-- help (prototype chrome) -->
+<dialog id="help" aria-labelledby="h-help">
+  <div class="dlg-h"><h2 id="h-help">What to try</h2><button type="button" class="x" data-close>Close</button></div>
   <div class="dlg-b">
     <ol>
-      <li>Нажми на любую подчёркнутую фразу в истории: рядом откроется то, на чём она держится.</li>
-      <li>В карточке «Needs you» удержи кнопку Hold to approve. Или выбери другой вариант, откажись, либо просто дождись, пока выйдет время.</li>
-      <li>После решения подожди несколько секунд: придут flow-логи, и «не знаю» в истории станет фактом.</li>
-      <li>Наведи на события таймлайна и нажми на любое. Справа от линии now лежит прогноз.</li>
-      <li>Выбери фразу «No other endpoint ran the package» и оспорь её через Dispute.</li>
-      <li>Открой команды строкой внизу или клавишами ⌘K: трассировка, брифинг, новая проверка.</li>
-      <li>Отмени любое действие в «Done without you» и посмотри, что спросит агент.</li>
-      <li>Кнопки времени наверху переключают состояния экрана. «Morning» показывает режим отчёта.</li>
+      <li>Click any underlined phrase in the story to see the evidence behind it.</li>
+      <li>In the “Needs you” card, press and hold “Hold to approve”. Or pick another option, decline, or just let the timer run out.</li>
+      <li>After you decide, wait a few seconds: the flow logs arrive and the “unknown” in the story turns into a fact.</li>
+      <li>Hover over timeline events and click any of them. Everything to the right of the “now” line is a forecast.</li>
+      <li>Select “No other endpoint ran the package” and challenge it with “Dispute this”.</li>
+      <li>Open commands from the field at the bottom or with ⌘K: the investigation trace, a 30-second brief, a new check.</li>
+      <li>Undo any action in “Done without you” and see what the agent asks.</li>
+      <li>The time buttons at the top switch between moments of the incident. “Morning” shows the wrap-up view.</li>
     </ol>
-    <p>Это набросок концепции, а не готовый дизайн. Сценарий, имена и цифры выдуманы.</p>
+    <p>This is a concept sketch, not a finished design. The scenario, names and numbers are made up.</p>
   </div>
 </dialog>
 
