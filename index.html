@@ -495,7 +495,7 @@ body{background:radial-gradient(1200px 560px at 50% -140px,rgba(46,86,200,.26),t
 /* verdict as a card; clock times live at the end of the headline */
 .band{width:calc(100% - 64px);max-width:1416px;margin:16px auto;border-radius:12px;padding:26px 32px 28px;padding-inline:32px}
 .band h1 .h-time{white-space:nowrap;font-weight:400;opacity:.55;font-variant-numeric:tabular-nums}
-.band h1 .h-time::before{content:"·";margin:0 .3em 0 0}
+.band h1 .h-time::before{content:"·";display:inline-block;margin:0 .26em 0 0;transform:translateY(-.1em)}
 @media (max-width:1180px){.band{width:calc(100% - 32px);padding-inline:24px}}
 @media (max-width:860px){.band{padding:20px;border-radius:12px}}
 </style>
