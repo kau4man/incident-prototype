@@ -7,7 +7,7 @@
 <title>Final prototype</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@300..800&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@300..800&family=Bricolage+Grotesque:opsz,wght@12..96,400..700&display=swap" rel="stylesheet">
 <style>
 /* Layout: living aura behind frosted-glass cards; big airy hero verdict, two-column case sheet + decision rail. Dark only, like igorkaufman.com */
 @property --a1{syntax:'<color>';inherits:true;initial-value:#ffc278}
@@ -440,9 +440,9 @@ body{background:radial-gradient(1200px 560px at 50% -140px,rgba(46,86,200,.26),t
 .band{width:auto;max-width:none;margin:0 0 16px;border-radius:0;padding-block:16px 18px;padding-inline:max(32px,calc((100% - 1416px)/2),env(safe-area-inset-left,0px)) max(32px,calc((100% - 1416px)/2),env(safe-area-inset-right,0px))}
 .eyebrow{display:none}
 .band{align-items:center}
-.band h1{font-family:"Newsreader",Georgia,"Times New Roman",serif;font-weight:500;letter-spacing:-.015em;line-height:1.04;font-size:clamp(28px,3.37vw,46.75px)}
+.band h1{font-family:"Bricolage Grotesque","Manrope",system-ui,sans-serif;font-weight:600;letter-spacing:-.025em;line-height:1.05;font-size:clamp(28px,3.37vw,46.75px)}
 .band{padding-block:26px 28px}
-.band-aside strong{font-family:"Newsreader",Georgia,"Times New Roman",serif;font-weight:500;letter-spacing:-.01em;font-variant-numeric:tabular-nums lining-nums;margin:5px 0 -5px}
+.band-aside strong{font-family:"Bricolage Grotesque","Manrope",system-ui,sans-serif;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin:2px 0 0}
 @media (max-width:860px){.band{padding-block:22px 24px}}
 .band h1{margin-bottom:4px}
 .band p{line-height:1.5}
@@ -485,6 +485,13 @@ body{background:radial-gradient(1200px 560px at 50% -140px,rgba(46,86,200,.26),t
 .dc .dc-head{margin:-24px -24px 20px;padding:10px 24px;gap:10px;background:color-mix(in srgb,var(--state) 12%,transparent);border-bottom:1px solid color-mix(in srgb,var(--state) 28%,transparent)}
 .dc .dc-head h2{color:var(--ink-2);font-size:11.5px}
 @media (max-width:860px){.dc .dc-head{margin:-20px -20px 18px;padding:10px 20px}}
+
+/* verdict as a card; clock times live at the end of the headline */
+.band{width:calc(100% - 64px);max-width:1416px;margin:16px auto;border-radius:12px;padding:26px 32px 28px;padding-inline:32px}
+.band h1 .h-time{white-space:nowrap;font-weight:400;opacity:.55;font-variant-numeric:tabular-nums}
+.band h1 .h-time::before{content:"·";margin:0 .3em 0 0}
+@media (max-width:1180px){.band{width:calc(100% - 32px);padding-inline:24px}}
+@media (max-width:860px){.band{padding:20px;border-radius:12px}}
 </style>
 </head>
 <body data-phase="hot">
@@ -780,7 +787,12 @@ function renderBand(){
   }
   document.body.setAttribute('data-phase',p);
   $('#band-e').textContent={hot:'Active attack · INC-48213',exec:'Responding',contained:'Contained',holding:'Holding the line',morning:'Case closed'}[p];
-  $('#band-h').textContent=h.replace(/\.$/,'');$('#band-p').textContent=t;$('#band-l').textContent=l;$('#band-v').textContent=v;$('#band-s').textContent=s;
+  var cd=(p==='hot'&&S.decision!=='declined'&&S.decision!=='snoozed');
+  var bh=$('#band-h');bh.textContent=h.replace(/\.$/,'');
+  if(!cd&&v){var ht=document.createElement('span');ht.className='h-time';ht.title=l;ht.textContent=v+(s?' '+s:'');bh.appendChild(document.createTextNode(' '));bh.appendChild(ht);}
+  $('#band-p').textContent=t;
+  $('.band-aside').hidden=!cd;
+  $('#band-l').textContent=cd?l:'';$('#band-v').textContent=cd?v:'';$('#band-s').textContent=cd?s:'';
 }
 
 /* ---------- story + evidence ---------- */
