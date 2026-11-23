@@ -1,0 +1,1214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Final prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@300..800&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+<style>
+/* Layout: living aura behind frosted-glass cards; big airy hero verdict, two-column case sheet + decision rail. Dark only, like igorkaufman.com */
+@property --a1{syntax:'<color>';inherits:true;initial-value:#ffc278}
+@property --a2{syntax:'<color>';inherits:true;initial-value:#ff6f7d}
+@property --a3{syntax:'<color>';inherits:true;initial-value:#a99bfa}
+@property --state{syntax:'<color>';inherits:true;initial-value:#ffc278}
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:dark;
+  --bg:#000;
+  --sheet:#0a0a10;
+  --card:rgba(255,255,255,.05);
+  --tint:rgba(255,255,255,.06);
+  --glass:rgba(255,255,255,.04);
+  --glass-hi:rgba(14,14,22,.72);
+  --ink:#ffffff; --ink-2:rgba(255,255,255,.76); --ink-3:rgba(255,255,255,.56);
+  --line:rgba(255,255,255,.1); --line-2:rgba(255,255,255,.2);
+  --agent:#7bc1ff; --agent-soft:rgba(123,193,255,.16);
+  --att:#ff8f8a; --att-soft:rgba(255,120,115,.16);
+  --human:#ffc278; --human-soft:rgba(255,194,120,.15);
+  --ok:#8ee6bd; --ok-soft:rgba(142,230,189,.14);
+  --lav:#a99bfa; --pink:#fdbbfd;
+  --on-warm:#1a1206;
+  --font:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --shadow:inset 0 1px 0 rgba(255,255,255,.08),0 30px 60px -36px rgba(0,0,0,.9);
+  --gutter:max(16px,env(safe-area-inset-left,0px));
+  --gutter-r:max(16px,env(safe-area-inset-right,0px));
+}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%;background:#000;scroll-padding-top:90px}
+body{
+  margin:0;isolation:isolate;position:relative;min-height:100vh;
+  background:var(--bg);color:var(--ink);
+  font-family:var(--font);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;
+  --a1:#ffc278;--a2:#ff6f7d;--a3:#a99bfa;
+  transition:--a1 1.6s ease,--a2 1.6s ease,--a3 1.6s ease;
+}
+body[data-phase="exec"]{--a1:#7bc1ff;--a2:#a99bfa;--a3:#5b7dff}
+body[data-phase="contained"]{--a1:#8ee6bd;--a2:#7bc1ff;--a3:#4fd1c5}
+body[data-phase="holding"]{--a1:#ffc278;--a2:#ffe08a;--a3:#ff9e5e}
+body[data-phase="morning"]{--a1:#a99bfa;--a2:#fdbbfd;--a3:#7bc1ff}
+button{font:inherit;color:inherit}
+code,.mono{font-family:var(--mono);font-size:.9em}
+h1,h2,h3,p{margin:0}
+:focus-visible{outline:2px solid var(--agent);outline-offset:3px;border-radius:6px}
+
+/* ---------- aura ---------- */
+.aura{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.aura i{position:absolute;border-radius:50%;will-change:transform}
+.aura .o{filter:blur(90px)}
+.aura .o1{width:72vw;height:58vh;left:14vw;top:-26vh;background:radial-gradient(closest-side,var(--a1),transparent);opacity:.55;animation:d1 28s ease-in-out infinite alternate}
+.aura .o2{width:52vw;height:52vw;left:-14vw;top:30vh;background:radial-gradient(closest-side,var(--a3),transparent);opacity:.34;animation:d2 34s ease-in-out infinite alternate}
+.aura .o3{width:48vw;height:48vw;right:-12vw;top:6vh;background:radial-gradient(closest-side,var(--a2),transparent);opacity:.3;animation:d3 40s ease-in-out infinite alternate}
+.aura .o4{width:64vw;height:42vh;left:26vw;bottom:-26vh;background:radial-gradient(closest-side,var(--a1),transparent);opacity:.22;animation:d2 36s ease-in-out infinite alternate-reverse}
+.aura .spot{width:40rem;height:40rem;left:0;top:0;margin:-20rem 0 0 -20rem;background:radial-gradient(closest-side,rgba(255,255,255,.1),transparent);opacity:0;transition:opacity .8s}
+.aura .spot.on{opacity:1}
+.aura::after{content:"";position:absolute;inset:0;opacity:.2;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+@keyframes d1{to{transform:translate3d(6vw,5vh,0) scale(1.12)}}
+@keyframes d2{to{transform:translate3d(8vw,-6vh,0) scale(1.18)}}
+@keyframes d3{to{transform:translate3d(-7vw,8vh,0) scale(.9)}}
+
+/* ---------- glass ---------- */
+.read,.race,.known>section,#wrap,#done{
+  position:relative;padding:28px;background:var(--glass);border:1px solid var(--line);border-radius:32px;
+  -webkit-backdrop-filter:blur(40px) saturate(150%);backdrop-filter:blur(40px) saturate(150%);box-shadow:var(--shadow);
+}
+
+/* ---------- prototype strip ---------- */
+.proto{position:relative;z-index:30;display:flex;align-items:center;gap:12px;padding:8px var(--gutter-r) 8px var(--gutter);background:rgba(255,255,255,.03);border-bottom:1px solid var(--line);font-size:12.5px;overflow-x:auto;white-space:nowrap;color:var(--ink-2)}
+.proto-l{opacity:.7}
+.proto-steps{display:flex;gap:4px}
+.proto button{border:0;background:transparent;color:inherit;padding:6px 14px;border-radius:9999px;cursor:pointer;transition:background .2s,color .2s}
+.proto button:hover{background:rgba(255,255,255,.1);color:#fff}
+.proto button b{font-family:var(--mono);font-weight:500;margin-right:6px;opacity:.7}
+.proto button[aria-pressed="true"]{background:#fff;color:#000}
+.proto .proto-help{margin-left:auto;background:rgba(255,255,255,.08)}
+
+/* ---------- top bar ---------- */
+.top{position:sticky;top:0;z-index:25;display:flex;align-items:center;gap:20px;padding:14px var(--gutter-r) 14px var(--gutter);padding-inline:max(32px,env(safe-area-inset-left,0px)) max(32px,env(safe-area-inset-right,0px));background:rgba(0,0,0,.4);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border-bottom:1px solid var(--line)}
+.crumb{display:flex;align-items:center;gap:10px;min-width:0;color:var(--ink-2);font-size:14px}
+.mark{width:10px;height:10px;border-radius:50%;background:var(--a1);box-shadow:0 0 14px 2px var(--a1);flex:none;margin-right:4px}
+.crumb .sep{color:var(--ink-3)}
+.crumb > span{white-space:nowrap}
+.crumb .ttl{color:var(--ink);font-weight:600;margin-left:8px;overflow:hidden;text-overflow:ellipsis}
+.team{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2);white-space:nowrap}
+.p{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;border:1px solid var(--line-2);font-size:11.5px;font-weight:700;background:rgba(255,255,255,.08)}
+.p.you{border-color:var(--human);background:var(--human-soft);color:var(--human)}
+.ag{display:inline-block;width:8px;height:8px;background:var(--agent);border-radius:50%;box-shadow:0 0 10px var(--agent);margin:0 6px 1px 8px;flex:none}
+.team .a{display:inline-flex;align-items:center;padding:4px 12px 4px 4px;border-radius:9999px;background:rgba(255,255,255,.05);border:1px solid var(--line)}
+.team .a em{font-style:normal;color:var(--ink-3);margin-left:5px}
+.team .a.live em{color:var(--agent)}
+.team .a.live .ag{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.3}}
+
+/* ---------- verdict band ---------- */
+.band{--band-bg:#5C2E33;--band-ink:#FFFFFF;max-width:1416px;width:calc(100% - 64px);margin:28px auto 22px;padding:34px 40px 36px;border-radius:32px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:40px;align-items:end;background:var(--band-bg);color:var(--band-ink);box-shadow:0 30px 90px -30px color-mix(in srgb,var(--band-bg) 55%,transparent),inset 0 1px 0 rgba(255,255,255,.45);transition:background-color .8s ease,color .8s ease,box-shadow .8s ease}
+body[data-phase="exec"] .band{--band-bg:#1F2C5C;--band-ink:#FFFFFF}
+body[data-phase="contained"] .band{--band-bg:#14382B;--band-ink:#FFFFFF}
+body[data-phase="holding"] .band{--band-bg:#56300B;--band-ink:#FFFFFF}
+body[data-phase="morning"] .band{--band-bg:#1E2430;--band-ink:#FFFFFF}
+.eyebrow{display:block;font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--band-ink);opacity:.62;margin-bottom:14px}
+.band h1{font-family:var(--font);font-weight:600;font-size:clamp(30px,3.6vw,50px);line-height:1.06;letter-spacing:-.03em;margin-bottom:12px;max-width:18em;text-wrap:balance}
+.band p{font-size:16.5px;line-height:1.55;max-width:80ch;opacity:.82}
+.band-aside{display:grid;gap:2px;min-width:180px;text-align:right}
+.band-aside span{font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.62}
+.band-aside strong{font-weight:600;font-size:52px;line-height:1.05;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.band-aside small{font-size:13px;opacity:.72}
+.band-aside:has(strong:empty){visibility:hidden}
+
+/* ---------- layout ---------- */
+.grid{max-width:1480px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:20px;align-items:start;padding-block:0 28px;padding-inline:max(32px,env(safe-area-inset-left,0px)) max(32px,env(safe-area-inset-right,0px))}
+.sheet{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;min-width:0}
+.sheet>*,.rail>*,.read>*{min-width:0}
+.rail{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;min-width:0;align-content:start}
+.sec-h{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.sec-h h2{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+.sec-h .count{font-size:12px;font-weight:800;min-width:22px;text-align:center;padding:1px 8px;border-radius:9999px;background:var(--human);color:var(--on-warm)}
+.sec-h .count.zero{background:rgba(255,255,255,.08);color:var(--ink-3)}
+.sec-h .meta{margin-left:auto;font-size:12.5px;color:var(--ink-3);text-align:right}
+
+/* ---------- story + evidence ---------- */
+.read{display:grid;grid-template-columns:minmax(0,1fr) minmax(270px,340px);gap:32px;align-items:start}
+.story{font-size:21px;line-height:1.7;font-weight:400;color:rgba(255,255,255,.84);max-width:34em;letter-spacing:-.005em}
+.claim{color:#fff;cursor:pointer;border-radius:4px;padding:1px 2px;margin:0 -2px;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:6px;text-decoration-color:var(--agent);-webkit-box-decoration-break:clone;box-decoration-break:clone;transition:background .2s}
+.claim.inf{text-decoration-style:dashed}
+.claim.unk{text-decoration-style:dotted;text-decoration-color:var(--human);background:var(--human-soft)}
+.claim.hum{text-decoration-style:double;text-decoration-color:var(--ok)}
+.claim.new{background:var(--ok-soft)}
+.claim:hover{background:rgba(255,255,255,.1)}
+.claim[aria-pressed="true"]{background:var(--agent-soft)}
+.claim.unk[aria-pressed="true"]{background:var(--human);color:var(--on-warm)}
+.claim.flagged{text-decoration-color:var(--att)}
+.v{display:none}
+.story[data-flow="0"] .flow0,.story[data-flow="1"] .flow1,
+.story[data-dis="0"] .dis0,.story[data-dis="1"] .dis1,
+.story[data-res="revoke"] .res-revoke,.story[data-res="source"] .res-source{display:inline}
+.was{text-decoration:line-through;text-decoration-thickness:1.5px;text-decoration-color:var(--att);color:var(--ink-3)}
+.chg{font-family:var(--font);font-size:11.5px;font-weight:700;padding:2px 10px;border-radius:9999px;background:var(--ok-soft);color:var(--ok);margin-left:6px;white-space:nowrap;vertical-align:3px}
+.key{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:22px;font-size:12.5px;color:var(--ink-3)}
+.key b{font-weight:500;color:var(--ink-2);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:5px;text-decoration-color:var(--agent)}
+.key .inf{text-decoration-style:dashed}
+.key .unk{text-decoration-style:dotted;text-decoration-color:var(--human)}
+.key .hum{text-decoration-style:double;text-decoration-color:var(--ok)}
+
+.margin{background:rgba(0,0,0,.32);border:1px solid var(--line);border-radius:24px;padding:20px;font-size:13.5px;line-height:1.55;min-height:240px;color:var(--ink-2)}
+.ev-type{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.04em;padding:3px 11px;border-radius:9999px;background:var(--agent-soft);color:var(--agent);margin-bottom:12px}
+.ev-type.unk{background:var(--human);color:var(--on-warm)}
+.ev-type.hum,.ev-type.ok{background:var(--ok-soft);color:var(--ok)}
+.ev-type.fc{background:transparent;border:1px dashed var(--ink-3);color:var(--ink-2)}
+.margin h3{font-size:13.5px;font-weight:700;margin:0 0 6px;color:#fff}
+.margin h3:not(:first-of-type){margin-top:14px}
+.margin p{margin:0 0 8px}
+.evs{list-style:none;margin:0 0 10px;padding:12px 14px;background:rgba(0,0,0,.4);border:1px solid var(--line);border-radius:16px;font-family:var(--mono);font-size:11.8px;line-height:1.5;display:grid;gap:8px;color:rgba(255,255,255,.82)}
+.evs li{display:grid;grid-template-columns:60px minmax(0,1fr);gap:8px;overflow-wrap:anywhere}
+.evs.nt li{grid-template-columns:1fr}
+.evs time{color:var(--ink-3)}
+.evs b{font-weight:500;color:var(--agent)}
+.margin table{border-collapse:collapse;width:100%;margin:0 0 10px;font-size:13px}
+.margin td{padding:7px 0;border-top:1px solid var(--line)}
+.margin td:last-child{text-align:right;font-family:var(--mono);font-size:12px;color:#fff}
+.ev-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.lnk{background:none;border:0;padding:0;cursor:pointer;color:var(--agent);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.dispute{margin-top:14px;padding:14px;border:1px solid var(--human);border-radius:20px;background:rgba(0,0,0,.35)}
+.dispute label{display:block;font-weight:700;color:#fff;margin-bottom:8px}
+.dispute textarea{display:block;width:100%;min-height:72px;font:inherit;color:#fff;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:14px;padding:10px 12px;resize:vertical}
+.dispute .hint{margin:10px 0 12px;font-size:12.5px;color:var(--ink-3)}
+.reply{display:grid;grid-template-columns:16px 1fr;gap:6px;margin-top:14px;padding:14px;border-radius:18px;background:rgba(255,255,255,.07)}
+.reply .ag{margin:5px 0 0 1px}
+.reply ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:4px}
+.reply li::before{content:"✓";color:var(--ok);font-weight:700;margin-right:8px}
+
+/* ---------- timeline ---------- */
+.tl-scroll{overflow-x:auto;padding:40px 0 4px}
+.tl{display:grid;grid-template-columns:78px minmax(560px,1fr)}
+.tl-names{position:sticky;left:0;z-index:4;background:linear-gradient(90deg,#0a0f1c 82%,rgba(10,15,28,0))}
+.tl-names span{display:flex;align-items:center;height:56px;font-size:12.5px;font-weight:700;color:var(--ink-2)}
+.tl-in{position:relative;margin:0 16px}
+.track{position:relative;height:56px}
+.track::before{content:"";position:absolute;left:-16px;right:-16px;top:50%;border-top:1px solid var(--line)}
+.tl-future{position:absolute;top:-10px;bottom:24px;right:-16px;background:rgba(255,255,255,.035);border-radius:0 18px 18px 0}
+.tl-now{position:absolute;top:-26px;bottom:24px;border-left:2px solid #fff;z-index:1;box-shadow:0 0 18px rgba(255,255,255,.5)}
+.tl-now span{position:absolute;top:-6px;left:8px;font-size:11.5px;font-weight:700;white-space:nowrap}
+.e,.b{position:absolute;top:50%;border:0;padding:0;cursor:pointer;z-index:2}
+.e{transform:translate(-50%,-50%);width:26px;height:26px;background:none;display:grid;place-items:center;border-radius:50%}
+.e i{display:block;width:11px;height:11px}
+.e.dot i{border-radius:50%;background:var(--att);box-shadow:0 0 12px var(--att)}
+.e.dia i{border-radius:50%;background:var(--agent);box-shadow:0 0 12px var(--agent)}
+.e.dia.ghost i{background:none;box-shadow:none;border:1.5px dashed var(--agent)}
+.e.dia.ask i{box-shadow:0 0 0 3px var(--human),0 0 16px var(--human)}
+.e.ring i{border-radius:50%;border:2px solid var(--ink-3);background:#0a0a10}
+.e.you i{width:13px;height:13px;border-radius:50%;background:var(--human);border:1.5px solid #fff;box-shadow:0 0 14px var(--human)}
+.e .n{position:absolute;top:-2px;right:-3px;min-width:14px;height:14px;padding:0 3px;border-radius:7px;background:#fff;color:#000;font-size:9.5px;font-weight:800;font-style:normal;display:grid;place-items:center}
+.b{height:10px;transform:translateY(-50%);border-radius:5px;background:var(--att);box-shadow:0 0 16px -2px var(--att)}
+.b.light{background:color-mix(in srgb,var(--att) 42%,transparent);box-shadow:none}
+.b.ghost{background:none;box-shadow:none;border:1.5px dashed var(--att)}
+.e.on i,.b.on{outline:2px solid #fff;outline-offset:3px}
+.lab{position:absolute;font-size:11.5px;line-height:1;color:var(--ink-3);white-space:nowrap;pointer-events:none}
+.e .lab.a{bottom:calc(100% - 1px)} .e .lab.u{top:calc(100% - 1px)}
+.b .lab.a{bottom:calc(100% + 8px)} .b .lab.u{top:calc(100% + 8px)}
+.lab.c{left:50%;transform:translateX(-50%)} .lab.l{left:5px} .lab.r{right:5px}
+.lab.struck{text-decoration:line-through}
+.tip{display:none;position:absolute;bottom:calc(100% + 16px);left:50%;transform:translateX(-50%);z-index:5;background:#fff;color:#000;font-size:12px;font-weight:500;line-height:1.35;padding:7px 11px;border-radius:12px;white-space:nowrap;text-align:left;pointer-events:none}
+.tip b{font-family:var(--mono);font-weight:500;margin-right:6px;opacity:.6}
+.b .tip{bottom:calc(100% + 26px)}
+.tl-l .tip{left:0;transform:none} .tl-r .tip{left:auto;right:0;transform:none}
+.e:hover .tip,.e:focus-visible .tip,.b:hover .tip,.b:focus-visible .tip{display:block}
+.e:hover,.b:hover,.e:focus-visible,.b:focus-visible{z-index:6}
+.axis{position:relative;height:24px}
+.axis span{position:absolute;top:8px;transform:translateX(-50%);font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.axis span::before{content:"";position:absolute;left:50%;top:-8px;height:5px;border-left:1px solid var(--ink-3)}
+.tl-key{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:12px;font-size:12.5px;color:var(--ink-3)}
+.tl-key i{display:inline-block;width:9px;height:9px;margin-right:6px;vertical-align:0}
+.tl-key .k-att{border-radius:50%;background:var(--att)}
+.tl-key .k-agt{border-radius:50%;background:var(--agent)}
+.tl-key .k-ppl{border-radius:50%;border:2px solid var(--ink-3)}
+.tl-key .k-gh{border-radius:50%;border:1.5px dashed var(--ink-3)}
+
+.known{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
+
+/* ---------- decision card ---------- */
+.dc{--state:var(--human);position:relative;overflow:hidden;padding:24px;font-size:14px;line-height:1.55;border-radius:32px;border:1px solid color-mix(in srgb,var(--state) 38%,transparent);
+  background:radial-gradient(120% 70% at 50% -15%,color-mix(in srgb,var(--state) 22%,transparent),transparent 62%),var(--glass-hi);
+  -webkit-backdrop-filter:blur(40px) saturate(150%);backdrop-filter:blur(40px) saturate(150%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 40px 90px -40px color-mix(in srgb,var(--state) 55%,transparent);
+  transition:--state .6s ease,border-color .6s,box-shadow .6s}
+.dc[data-state="executing"]{--state:var(--agent)}
+.dc[data-state="done"]{--state:var(--ok)}
+.dc[data-state="done"][data-opt="source"]{--state:var(--human)}
+.dc[data-state="declined"],.dc[data-state="snoozed"]{--state:#9aa0b4}
+.dc.nudge{animation:nudge .9s ease}
+@keyframes nudge{30%{box-shadow:0 0 0 4px var(--human),0 0 50px var(--human)}}
+.dc [data-show]{display:none}
+.dc[data-state="pending"] [data-show~="pending"],
+.dc[data-state="executing"] [data-show~="executing"],
+.dc[data-state="done"] [data-show~="done"],
+.dc[data-state="declined"] [data-show~="declined"],
+.dc[data-state="expired"] [data-show~="expired"],
+.dc[data-state="snoozed"] [data-show~="snoozed"]{display:block}
+.dc[data-state="pending"] [data-show~="pending"][data-inline]{display:inline-block}
+.dc-top{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink-2);margin-bottom:12px}
+.dc-top .ag{margin-left:1px}
+.dc-clock{margin-left:auto;font-size:12.5px;color:var(--att);background:var(--att-soft);padding:3px 11px;border-radius:9999px;white-space:nowrap}
+.dc-clock b{font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
+.dc-title{font-size:23px;line-height:1.22;font-weight:600;letter-spacing:-.02em;margin-bottom:10px;text-wrap:balance}
+.dc-title code{white-space:nowrap;background:rgba(255,255,255,.1);padding:1px 8px;border-radius:8px;font-size:.82em}
+.dc-why{color:var(--ink-2);margin-bottom:16px}
+.opts{border:0;margin:0 0 12px;padding:0;display:grid;gap:8px}
+.opts legend{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.opt{display:grid;grid-template-columns:20px 1fr;gap:2px 10px;padding:12px 16px;border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:20px;cursor:pointer;transition:background .2s,border-color .2s}
+.opt:hover{background:rgba(255,255,255,.07)}
+.opt:has(input:checked){border-color:rgba(255,255,255,.55);background:rgba(255,255,255,.09)}
+.opt input{margin:3px 0 0;accent-color:var(--agent)}
+.opt b{font-weight:600}
+.opt small{grid-column:2;color:var(--ink-2);font-size:13px}
+.rec{font-size:11px;font-weight:700;color:var(--agent);background:var(--agent-soft);border-radius:9999px;padding:2px 9px;margin-left:8px;white-space:nowrap}
+.impact{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0 0 16px;padding:14px 16px;background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:20px;font-size:13px}
+.impact dt{color:var(--ink-3)}
+.impact dd{margin:0;font-weight:600}
+.acts{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{font-weight:700;font-size:14px;padding:12px 24px;border-radius:9999px;border:1px solid transparent;background:#fff;color:#000;cursor:pointer;position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none;transition:transform .2s,background .2s,box-shadow .2s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 10px 30px -10px rgba(255,255,255,.5)}
+.btn span{position:relative}
+.btn.ghost{background:rgba(255,255,255,.08);color:#fff;border-color:var(--line)}
+.btn.ghost:hover{background:rgba(255,255,255,.15);box-shadow:none}
+.btn.sm{font-size:13px;padding:8px 16px}
+.btn.hold:not(.nohold)::before{content:"";position:absolute;inset:0;background:var(--agent);transform:scaleX(0);transform-origin:left;transition:transform .18s linear}
+.btn.hold.holding::before{transform:scaleX(1);transition:transform 1.2s linear}
+.dc-hint{font-size:12.5px;color:var(--ink-3);margin-top:12px}
+.dc-fallback{margin-top:18px;padding-top:14px;border-top:1px dashed var(--line-2);font-size:12.5px;color:var(--ink-2)}
+.steps{list-style:none;margin:8px 0 6px;padding:0;display:grid;gap:12px}
+.steps li{display:grid;grid-template-columns:24px 1fr;align-items:baseline;color:var(--ink-3)}
+.steps li::before{content:"○"}
+.steps li.ok{color:#fff}
+.steps li.ok::before{content:"✓";color:var(--ok);font-weight:700}
+.receipt{margin-bottom:16px;color:var(--ink-2)}
+.receipt b{display:block;font-size:17px;color:#fff;margin-bottom:6px;letter-spacing:-.01em}
+.learn{padding:16px;border-radius:22px;background:var(--agent-soft);border:1px solid rgba(123,193,255,.25);margin-top:16px}
+.learn p{margin-bottom:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 14px}
+.chips button{font-size:13px;font-weight:600;padding:8px 16px;border-radius:9999px;border:1px solid var(--line);background:rgba(255,255,255,.06);cursor:pointer;transition:background .2s}
+.chips button:hover{background:rgba(255,255,255,.12)}
+.chips button[aria-pressed="true"]{border-color:#fff;background:#fff;color:#000}
+.calm{margin-top:4px;padding:0 8px;font-size:14px;color:var(--ink-2)}
+
+/* ---------- lists ---------- */
+.rows{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.rows > li{border-bottom:1px solid var(--line)}
+.row{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:baseline;width:100%;text-align:left;background:none;border:0;padding:13px 4px;cursor:pointer;border-radius:12px;transition:background .2s}
+.row:hover{background:rgba(255,255,255,.04)}
+.row .tick{color:var(--ok);font-weight:700}
+.row .tick.q{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--human);color:var(--on-warm);font-size:10.5px}
+.row .tick.x{color:var(--ink-3)}
+.row time,.row .side{font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
+.row.undone .h{text-decoration:line-through;color:var(--ink-3)}
+.row[aria-expanded="true"] .h{font-weight:700}
+.more{padding:0 4px 16px 34px;color:var(--ink-2);font-size:13.5px}
+.more p{margin-bottom:10px}
+.more .q{color:#fff;font-weight:600}
+.note{margin-top:14px;font-size:12.5px;color:var(--ink-3)}
+.wrap-sum{font-size:19px;line-height:1.5;letter-spacing:-.01em;margin-bottom:18px;color:rgba(255,255,255,.88)}
+.signed{font-size:12.5px;color:var(--ok);font-weight:700}
+
+/* ---------- dock ---------- */
+.dock{position:sticky;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:20;display:flex;align-items:center;gap:16px;width:min(1180px,calc(100% - 32px));margin:12px auto 14px;padding:8px 8px 8px 24px;border-radius:9999px;background:rgba(14,14,22,.6);border:1px solid var(--line-2);-webkit-backdrop-filter:blur(40px) saturate(160%);backdrop-filter:blur(40px) saturate(160%);box-shadow:0 20px 60px -20px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.1)}
+.say{flex:1;min-width:0;display:flex;align-items:center;color:var(--ink-2);font-size:13.5px}
+.say .ag{margin-left:0}
+.say span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmd{display:flex;align-items:center;gap:10px;width:min(380px,44vw);padding:12px 18px;border:0;border-radius:9999px;background:rgba(255,255,255,.09);color:var(--ink-2);cursor:pointer;text-align:left;transition:background .2s}
+.cmd:hover{background:rgba(255,255,255,.16)}
+.cmd span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+kbd{font-family:var(--mono);font-size:11.5px;border:1px solid var(--line-2);border-radius:6px;padding:1px 7px;color:var(--ink-2);background:rgba(255,255,255,.06)}
+
+/* ---------- dialogs ---------- */
+dialog{border:1px solid var(--line-2);padding:0;background:rgba(16,16,24,.82);-webkit-backdrop-filter:blur(40px) saturate(150%);backdrop-filter:blur(40px) saturate(150%);color:var(--ink);border-radius:28px;box-shadow:0 40px 100px -20px rgba(0,0,0,.8);max-width:calc(100vw - 28px)}
+dialog::backdrop{background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.dlg-h{display:flex;align-items:center;gap:12px;padding:20px 24px 0}
+.dlg-h h2{font-size:17px;font-weight:600;letter-spacing:-.01em}
+.x{margin-left:auto;background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:9999px;padding:6px 14px;cursor:pointer;color:var(--ink-2)}
+.x:hover{background:rgba(255,255,255,.15)}
+.dlg-b{padding:16px 24px 24px}
+#palette{width:600px;margin-top:13vh}
+#pal-in{display:block;width:100%;font:inherit;font-size:17px;color:#fff;background:none;border:0;border-bottom:1px solid var(--line);padding:20px 24px;outline:none}
+#pal-in::placeholder{color:var(--ink-3)}
+.pal-list{list-style:none;margin:0;padding:10px}
+.pal-list button{display:grid;grid-template-columns:90px 1fr;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:16px;padding:12px 14px;cursor:pointer}
+.pal-list button .k{font-size:12px;font-weight:600;color:var(--ink-3)}
+.pal-list button[aria-selected="true"]{background:rgba(255,255,255,.1)}
+.pal-empty{padding:14px 24px 20px;color:var(--ink-3);font-size:13px}
+#trace{position:fixed;inset:0 0 0 auto;margin:0;height:100%;max-height:none;width:min(580px,100vw);border-radius:28px 0 0 28px;overflow:auto}
+.switch{display:flex;flex-wrap:wrap;gap:6px}
+.switch button{font-size:13px;font-weight:600;padding:7px 15px;border-radius:9999px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink-2);cursor:pointer}
+.switch button[aria-pressed="true"]{background:#fff;border-color:#fff;color:#000}
+.trace-count{font-size:12.5px;color:var(--ink-3);margin:12px 0 8px}
+.tq{border-top:1px solid var(--line)}
+.tq summary{display:grid;grid-template-columns:16px minmax(0,1fr) auto;gap:10px;align-items:center;padding:15px 0;cursor:pointer;list-style:none;font-size:14.5px}
+.tq summary::-webkit-details-marker{display:none}
+.tq summary::before{content:"";width:7px;height:7px;border-right:2px solid var(--ink-3);border-bottom:2px solid var(--ink-3);transform:rotate(-45deg);justify-self:center}
+.tq[open] summary::before{transform:rotate(45deg)}
+.tq-q{font-weight:600}
+.tq-a{font-size:12px;font-weight:700;padding:3px 11px;border-radius:9999px;background:var(--agent-soft);color:var(--agent);white-space:nowrap}
+.tq-a.unk{background:var(--human);color:var(--on-warm)}
+.tsteps{list-style:none;margin:0;padding:0 0 16px 26px;display:grid;gap:10px;font-size:13.5px;color:var(--ink-2)}
+.tsteps li{display:grid;grid-template-columns:16px minmax(0,1fr) auto;gap:8px;align-items:baseline}
+.tsteps li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--agent);box-shadow:0 0 8px var(--agent);align-self:center}
+.tsteps .rout{color:var(--ink-3)}
+.tsteps .rout::before{background:none;box-shadow:none;border:1.5px solid var(--ink-3)}
+.tsteps .dead::before{background:var(--ink-3);box-shadow:none}
+.tsteps .pend::before{background:var(--human);box-shadow:0 0 8px var(--human)}
+.tsteps .more-l{color:var(--ink-3)}
+.tsteps .more-l::before{background:none;box-shadow:none}
+.tsteps em{font-style:normal;color:var(--ink-3);font-size:12.5px;text-align:right}
+.tsteps .dead em{color:#fff;font-weight:700}
+#trace-body[data-mode="signal"] .rout,#trace-body[data-mode="signal"] .more-all{display:none}
+#trace-body[data-mode="all"] .more-signal{display:none}
+#brief{width:540px}
+.brief dt{font-size:11.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-top:18px}
+.brief dt:first-child{margin-top:0}
+.brief dd{margin:4px 0 0;font-size:18.5px;line-height:1.5;letter-spacing:-.01em;color:rgba(255,255,255,.9)}
+#help{width:540px}
+#help ol{margin:0;padding-left:20px;display:grid;gap:10px;font-size:14.5px;line-height:1.55;color:var(--ink-2)}
+#help p{margin-top:16px;font-size:13px;color:var(--ink-3)}
+
+/* ---------- responsive ---------- */
+@media (max-width:1360px){
+  .grid{grid-template-columns:minmax(0,1fr) 390px}
+  .read{grid-template-columns:minmax(0,1fr) 280px;gap:26px}
+}
+@media (max-width:1180px){
+  .grid{display:flex;flex-direction:column;gap:16px;padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px))}
+  .sheet,.rail{display:contents}
+  #needs,#wrap{order:1}
+  .read{order:2}
+  .race{order:3}
+  #done{order:4}
+  .known{order:5}
+  .band{width:calc(100% - 32px);padding:28px 28px 30px}
+  .top{padding-inline:max(20px,env(safe-area-inset-left,0px)) max(20px,env(safe-area-inset-right,0px))}
+  .dc{max-width:560px}
+  .grid>*,.sheet>*,.rail>*{min-width:0;max-width:100%}
+  .race{overflow:hidden}
+}
+@media (max-width:860px){
+  .read{grid-template-columns:1fr;gap:22px}
+  .read,.race,.known>section,#wrap,#done{padding:22px 18px;border-radius:26px}
+  .known{grid-template-columns:1fr;gap:16px}
+  .margin{min-height:0}
+  .band{grid-template-columns:1fr;gap:18px;padding:24px 20px 24px;border-radius:26px;margin-top:20px}
+  .band p{font-size:15.5px}
+  .band-aside{text-align:left;grid-template-columns:auto auto 1fr;align-items:baseline;gap:10px;min-width:0}
+  .band-aside strong{font-size:32px}
+  .story{font-size:19px}
+  .team .a,.crumb .ttl{display:none}
+  .dc{padding:20px;border-radius:26px}
+  .dock{border-radius:28px;padding:10px 10px 10px 18px;flex-direction:column;align-items:stretch;gap:8px}
+  .cmd{width:100%}
+  #palette{margin-top:8vh}
+  #trace{border-radius:0}
+}
+@media (prefers-reduced-motion:reduce){
+  .aura i,.aura .o{animation:none!important}
+  .aura .spot{display:none}
+  body{transition:none}
+  .dc{transition:none}
+  .team .a.live .ag,.dc.nudge{animation:none}
+  .btn.hold::before{transition:none!important}
+  .btn:hover{transform:none}
+}
+
+/* ---------- overrides: no background glow, radius 12, gap 16 ---------- */
+.aura{display:none}
+.band{box-shadow:none;margin-bottom:16px}
+.dc{box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 30px 60px -36px rgba(0,0,0,.9)}
+.band,.read,.race,.known>section,#wrap,#done,.dc,.margin,dialog{border-radius:12px}
+#trace{border-radius:12px 0 0 12px}
+.evs,.impact,.opt,.learn,.dispute,.reply,.tl-future,.dispute textarea{border-radius:8px}
+.tl-future{border-radius:0 8px 8px 0}
+.grid,.sheet,.rail,.known{gap:16px}
+@media (max-width:860px){
+  .band,.read,.race,.known>section,#wrap,#done,.dc{border-radius:12px}
+  #trace{border-radius:0}
+}
+
+/* ---------- overrides: faint navy ground, full-bleed verdict band ---------- */
+html{background:#03060f}
+body{background:radial-gradient(1200px 560px at 50% -140px,rgba(46,86,200,.26),transparent 70%),#03060f}
+.band{width:auto;max-width:none;margin:0 0 16px;border-radius:0;padding-block:16px 18px;padding-inline:max(32px,calc((100% - 1416px)/2),env(safe-area-inset-left,0px)) max(32px,calc((100% - 1416px)/2),env(safe-area-inset-right,0px))}
+.eyebrow{display:none}
+.band{align-items:center}
+.band h1{font-family:"Newsreader",Georgia,"Times New Roman",serif;font-weight:500;letter-spacing:-.015em;line-height:1.04;font-size:clamp(28px,3.37vw,46.75px)}
+.band{padding-block:26px 28px}
+.band-aside strong{font-family:"Newsreader",Georgia,"Times New Roman",serif;font-weight:500;letter-spacing:-.01em;font-variant-numeric:tabular-nums lining-nums;margin:5px 0 -5px}
+@media (max-width:860px){.band{padding-block:22px 24px}}
+.band h1{margin-bottom:4px}
+.band p{line-height:1.5}
+.band-aside strong{font-size:44px}
+@media (max-width:1180px){.band{padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px))}}
+@media (max-width:860px){.band{border-radius:0;margin-top:0;padding-block:18px 20px;gap:12px}.band-aside strong{font-size:30px}}
+/* no glow on any dot */
+.mark,.ag,.tsteps li::before,.tsteps .pend::before{box-shadow:none}
+/* timeline: flat marks, tuned contrast on the navy card */
+.e.dot i,.e.dia i,.e.you i,.b,.tl-now{box-shadow:none}
+.e.dot i{background:#ff8a85}
+.e.dia i{background:#7bc1ff}
+.e.dia.ask i{box-shadow:0 0 0 3px #0a0f1c,0 0 0 5px #ffc278}
+.e.dia.ghost i{border:1.5px dashed #8fcbff}
+.e.ring i{border-color:#9aa1b2;background:#0a0f1c}
+.e.you i{background:#ffc278;border-color:#0a0f1c;box-shadow:0 0 0 1.5px #ffc278}
+.b{background:#ff8a85}
+.b.light{background:#a65f5d}
+.b.ghost{border-color:#ff8a85}
+.track::before{border-top-color:rgba(255,255,255,.14)}
+.tl-future{background:rgba(255,255,255,.04)}
+.lab{color:rgba(255,255,255,.66)}
+.axis span{color:rgba(255,255,255,.6)}
+.axis span::before{border-left-color:rgba(255,255,255,.35)}
+.e .n{background:#fff;color:#0a0f1c;box-shadow:0 0 0 2px #0a0f1c}
+.e.on i,.b.on{outline-color:#fff}
+/* list hover: soft pill that extends past the divider lines */
+.row,.tq summary{position:relative;isolation:isolate;border-radius:0}
+.row:hover{background:none}
+.row::before,.tq summary::after{content:"";position:absolute;inset:3px -12px;z-index:-1;border-radius:8px;background:rgba(255,255,255,.06);opacity:0;transition:opacity .18s}
+.row:hover::before,.row:focus-visible::before,.row[aria-expanded="true"]::before,.tq summary:hover::after{opacity:1}
+.row[aria-expanded="true"]:not(:hover)::before{background:rgba(255,255,255,.035)}
+/* story text a touch smaller */
+.story{font-size:18px;line-height:1.7}
+.claim{text-underline-offset:5px}
+@media (max-width:860px){.story{font-size:17px}}
+/* needs-you header inside the decision card */
+.dc .dc-head{margin:-24px -24px 20px;padding:10px 24px;gap:10px;background:color-mix(in srgb,var(--state) 12%,transparent);border-bottom:1px solid color-mix(in srgb,var(--state) 28%,transparent)}
+.dc .dc-head h2{color:var(--ink-2);font-size:11.5px}
+@media (max-width:860px){.dc .dc-head{margin:-20px -20px 18px;padding:10px 20px}}
+</style>
+</head>
+<body data-phase="hot">
+<div class="aura" aria-hidden="true"><i class="o o1"></i><i class="o o2"></i><i class="o o3"></i><i class="o o4"></i></div>
+
+<div class="proto" role="region" aria-label="Prototype controls">
+  <span class="proto-l">Prototype</span>
+  <div class="proto-steps" role="group" aria-label="Jump to a moment">
+    <button type="button" data-jump="open" aria-pressed="true"><b>02:21</b>Opened</button>
+    <button type="button" data-jump="decided" aria-pressed="false"><b>02:22</b>Decided</button>
+    <button type="button" data-jump="contained" aria-pressed="false"><b>02:25</b>Contained</button>
+    <button type="button" data-jump="morning" aria-pressed="false"><b>09:00</b>Morning</button>
+  </div>
+  <button type="button" class="proto-help" data-open="help" lang="ru">Что попробовать</button>
+</div>
+
+<header class="top">
+  <div class="crumb"><span class="mark" aria-hidden="true"></span><span>Incidents</span><span class="sep">/</span><span class="mono">INC-48213</span><span class="ttl">Poisoned package in a coding agent, stolen cloud key, S3 download</span></div>
+  <div class="team" aria-label="On this case">
+    <span class="p you" title="Igor, on call (you)">I</span><span class="p" title="Daniel Katz, affected developer">D</span><span class="p" title="Omer, backup on call">O</span>
+    <span class="a"><i class="ag"></i>Endpoint</span>
+    <span class="a"><i class="ag"></i>Identity</span>
+    <span class="a live" id="cloud"><i class="ag"></i>Cloud <em id="cloud-s">reading flow logs</em></span>
+  </div>
+</header>
+
+<section class="band" aria-live="polite">
+  <div><span class="eyebrow" id="band-e"></span><h1 id="band-h"></h1><p id="band-p"></p></div>
+  <div class="band-aside"><span id="band-l"></span><strong id="band-v"></strong><small id="band-s"></small></div>
+</section>
+
+<main class="grid">
+  <div class="sheet">
+    <div class="read">
+      <section aria-labelledby="h-story">
+        <div class="sec-h"><h2 id="h-story">What happened</h2><span class="meta" id="story-meta"></span></div>
+        <p class="story" id="story" data-flow="0" data-dis="0" data-res="">A coding agent on Daniel Katz’s laptop <span class="claim" data-c="c1">installed a look-alike npm package at 02:14</span>. Its install script <span class="claim" data-c="c2">read his AWS key and sent it to a domain registered three days ago</span>. Two minutes later someone <span class="claim" data-c="c3">took the role ci-deployer from a network we’ve never seen</span>. They are <span class="claim inf" data-c="c4">likely automated: 212 API calls in 140 seconds</span>, and they started downloading customer exports. <span class="v flow0"><span class="claim unk" data-c="c5">About 340 MB may have left before I disabled the key</span>; I’ll know at 02:25.</span><span class="v flow1"><span class="was">About 340 MB may have left before I disabled the key; I’ll know at 02:25.</span> <span class="claim new" data-c="c5">338 MB left before I disabled the key, and nothing after</span>.<span class="chg">changed 02:25</span></span> <span class="v dis0"><span class="claim" data-c="c6">No other endpoint ran the package</span>.</span><span class="v dis1"><span class="was">No other endpoint ran the package.</span> <span class="claim new" data-c="c6">No other endpoint has run the package yet. LNX-BUILD-07 would have run it at the 03:00 build, so I purged its cache</span>.<span class="chg">corrected by Igor</span></span> <span class="claim hum" data-c="c7">Daniel confirms this wasn’t him</span>. <span class="v res-revoke"><span class="claim new" data-c="c8">With Igor’s approval I revoked every session of ci-deployer at 02:21:19, and the attacker’s calls have failed since</span>.<span class="chg">new 02:21</span></span><span class="v res-source"><span class="claim new" data-c="c9">I blocked the attacker’s network on ci-deployer; their calls fail until they change address</span>.<span class="chg">new</span></span></p>
+        <p class="key"><span><b>Observed</b> in telemetry</span><span><b class="inf">Inferred</b> by me</span><span><b class="unk">Unknown</b> so far</span><span><b class="hum">Confirmed</b> by a person</span></p>
+      </section>
+      <aside class="margin" id="evidence" aria-live="polite" aria-label="Evidence for the selected claim"></aside>
+    </div>
+
+    <section class="race" aria-labelledby="h-race">
+      <div class="sec-h"><h2 id="h-race">Attacker vs. response</h2><span class="meta">Time stretches where things move fast</span></div>
+      <div class="tl-scroll" tabindex="0" role="group" aria-label="Timeline, scrolls sideways on small screens"><div class="tl" id="tl"></div></div>
+      <p class="tl-key"><span><i class="k-att"></i>Attacker</span><span><i class="k-agt"></i>Agents</span><span><i class="k-ppl"></i>People</span><span><i class="k-gh"></i>Dashed: forecast or staged</span></p>
+    </section>
+
+    <div class="known">
+      <section id="checks" aria-labelledby="h-checks">
+        <div class="sec-h"><h2 id="h-checks">Checked and clear</h2></div>
+        <ul class="rows" id="check-list"></ul>
+      </section>
+      <section id="blind" aria-labelledby="h-blind">
+        <div class="sec-h"><h2 id="h-blind">What I don’t know</h2></div>
+        <ul class="rows" id="blind-list"></ul>
+      </section>
+    </div>
+  </div>
+
+  <aside class="rail">
+    <section id="needs" aria-labelledby="h-needs">
+      <article class="dc" id="dc" data-state="pending">
+        <div class="sec-h dc-head"><h2 id="h-needs">Needs you</h2><span class="count" id="needs-n">1</span></div>
+        <div class="dc-top"><span><i class="ag"></i>Cloud agent <span data-show="pending" data-inline>asks</span></span>
+          <span class="dc-clock" data-show="pending" data-inline>next download in <b id="dc-clock">01:28</b></span></div>
+        <h3 class="dc-title">Revoke all active sessions of role <code>ci-deployer</code><span data-show="pending" data-inline>?</span></h3>
+
+        <div data-show="pending">
+          <p class="dc-why">The key is disabled, but the session they already opened stays valid until 02:59, and they’re listing 4.1 GB of customer exports right now. <button type="button" class="lnk" data-sel="listing">3 events</button></p>
+          <fieldset class="opts">
+            <legend>Options</legend>
+            <label class="opt"><input type="radio" name="opt" value="revoke" checked><span><b>Revoke all sessions</b><span class="rec">Recommended</span></span><small>Stops them now. Interrupts 3 pipelines.</small></label>
+            <label class="opt"><input type="radio" name="opt" value="source"><span><b>Block the attacker’s network only</b></span><small>Nothing breaks. Holds until they switch address.</small></label>
+            <label class="opt"><input type="radio" name="opt" value="wait"><span><b>Wait for the prod deploy, about 6 min</b></span><small>Nothing breaks. The download may start first.</small></label>
+          </fieldset>
+          <dl class="impact" aria-live="polite">
+            <dt>Stops the attacker</dt><dd id="imp-stop"></dd>
+            <dt>What it breaks</dt><dd id="imp-breaks"></dd>
+            <dt>How to recover</dt><dd id="imp-undo"></dd>
+          </dl>
+          <div class="acts">
+            <button type="button" class="btn hold" id="dc-primary"><span>Hold to approve</span></button>
+            <button type="button" class="btn ghost" data-act="decline"><span>Decline</span></button>
+          </div>
+          <p class="dc-hint" id="dc-hint"></p>
+          <p class="dc-fallback">No answer when the download starts? I’ll block the attacker’s network only and page Omer, the backup on call. <button type="button" class="lnk" data-sel="fallback">Why only that</button></p>
+        </div>
+
+        <div data-show="executing">
+          <ol class="steps" id="dc-steps"></ol>
+          <p class="dc-hint">Approved by Igor at 02:21:14.</p>
+        </div>
+
+        <div data-show="done">
+          <p class="receipt"><b id="done-h"></b><span id="done-p"></span></p>
+          <div id="done-source">
+            <div class="acts"><button type="button" class="btn hold" id="dc-full"><span>Hold to approve the full revoke</span></button><button type="button" class="btn ghost" data-act="unblock"><span>Remove the block</span></button></div>
+            <p class="dc-hint">The full revoke stays staged. I’ll ask again when the prod deploy finishes.</p>
+          </div>
+          <div class="learn" id="learn">
+            <p>You’ve approved this 4 times out of 4. Want me to do it without asking when no production pipeline is affected?</p>
+            <div class="acts"><button type="button" class="btn sm" data-act="rule-yes"><span>Make it a rule</span></button><button type="button" class="btn ghost sm" data-act="rule-no"><span>Keep asking</span></button></div>
+          </div>
+          <p class="dc-hint" id="learn-reply" hidden></p>
+        </div>
+
+        <div data-show="declined">
+          <p class="dc-why">Declined by Igor at 02:21:14. What’s the reason? One tap is enough.</p>
+          <div class="chips" id="reasons">
+            <button type="button" aria-pressed="false" data-reason="expected">Expected activity</button>
+            <button type="button" aria-pressed="false" data-reason="broad">Too broad</button>
+            <button type="button" aria-pressed="false" data-reason="timing">Bad timing</button>
+            <button type="button" aria-pressed="false" data-reason="mine">I’ll handle it</button>
+          </div>
+          <div class="reply" id="reason-reply" hidden><i class="ag"></i><span></span></div>
+          <p class="dc-hint"><button type="button" class="lnk" data-act="reopen">Reconsider</button></p>
+        </div>
+
+        <div data-show="expired">
+          <p class="receipt"><b>No answer when the download started</b>At 02:22:38 I blocked the attacker’s network, the one step policy lets me take alone. Their calls fail for now. Omer is paged. The full revoke still needs a person.</p>
+          <div class="acts"><button type="button" class="btn hold" id="dc-full2"><span>Hold to approve the full revoke</span></button></div>
+          <p class="dc-hint">The request stays open for whoever picks it up.</p>
+        </div>
+
+        <div data-show="snoozed">
+          <p class="receipt"><b>Waiting for the prod deploy</b>I’ll ask again at 02:27, or right away if the download starts. If it does, 4.1 GB of customer exports are exposed.</p>
+          <p class="dc-hint">Igor chose to wait at 02:21:14. <button type="button" class="lnk" data-act="reopen">Decide now</button></p>
+        </div>
+      </article>
+      <p class="calm" id="calm" hidden>Nothing else needs you. I’ll call if that changes.</p>
+    </section>
+
+    <section id="wrap" aria-labelledby="h-wrap" hidden>
+      <div class="sec-h"><h2 id="h-wrap">Wrap-up</h2><span class="count" id="wrap-n">5</span></div>
+      <p class="wrap-sum">From first event to containment: 7 min 12 s. Your decision took 12 seconds. Agents took four steps alone and one with your approval.</p>
+      <ul class="rows" id="wrap-list"></ul>
+    </section>
+
+    <section id="done" aria-labelledby="h-done">
+      <div class="sec-h"><h2 id="h-done">Done without you</h2><span class="meta" id="done-meta"></span></div>
+      <ul class="rows" id="done-list"></ul>
+      <p class="note">All under the policy “reversible containment”. <button type="button" class="lnk" data-sel="actions">What that allows</button></p>
+    </section>
+
+  </aside>
+</main>
+
+<div class="dock">
+  <div class="say" aria-live="polite"><i class="ag"></i><span id="say"></span></div>
+  <button type="button" class="cmd" data-open="palette"><span>Ask, investigate or dispute anything</span><kbd>⌘K</kbd></button>
+</div>
+
+<!-- command palette -->
+<dialog id="palette" aria-label="Commands">
+  <input id="pal-in" type="text" placeholder="Ask, investigate or dispute…" autocomplete="off" aria-controls="pal-list">
+  <ul class="pal-list" id="pal-list" role="listbox"></ul>
+  <p class="pal-empty" id="pal-empty" hidden>This prototype only runs the suggestions above. Clear the field to see them.</p>
+</dialog>
+
+<!-- investigation trace -->
+<dialog id="trace" aria-labelledby="h-trace">
+  <div class="dlg-h"><h2 id="h-trace">Investigation trace</h2><button type="button" class="x" data-close>Close</button></div>
+  <div class="dlg-b" id="trace-body" data-mode="signal">
+    <div class="switch" role="group" aria-label="What to show">
+      <button type="button" data-trace="signal" aria-pressed="true">What changed my conclusion</button>
+      <button type="button" data-trace="all" aria-pressed="false">Everything I did</button>
+    </div>
+    <p class="trace-count" id="trace-count">8 of 61 steps shown</p>
+    <details class="tq" open><summary><span class="tq-q">Is this Daniel, or someone using his key?</span><span class="tq-a">Someone else</span></summary>
+      <ul class="tsteps">
+        <li>Compared the source network with 90 days of Daniel’s sign-ins <em>never seen</em></li>
+        <li>Asked Daniel on Slack <em>“No, I’m in bed”</em></li>
+        <li class="rout">Checked his calendar and travel bookings <em>no travel</em></li>
+        <li class="rout">Looked for a VPN or proxy session <em>none</em></li>
+        <li class="more-l more-signal">+6 routine checks, all clean</li>
+        <li class="more-l more-all">and 4 more like these, all clean</li>
+      </ul></details>
+    <details class="tq" open><summary><span class="tq-q">How did they get the key?</span><span class="tq-a">Poisoned npm package</span></summary>
+      <ul class="tsteps">
+        <li>Traced the read of ~/.aws/credentials back to an install script <em>postinstall.js</em></li>
+        <li>Checked the package’s history <em>published 3 days ago</em></li>
+        <li class="dead">Looked for phishing emails to Daniel in the last 7 days <em>Ruled out</em></li>
+        <li class="rout">Scanned his browser extensions <em>clean</em></li>
+        <li class="rout">Checked other secrets on the laptop <em>none read</em></li>
+        <li class="more-l more-signal">+9 routine checks, all clean</li>
+        <li class="more-l more-all">and 7 more like these, all clean</li>
+      </ul></details>
+    <details class="tq"><summary><span class="tq-q">How far did it spread?</span><span class="tq-a">One role, one bucket</span></summary>
+      <ul class="tsteps">
+        <li>Swept 1,240 endpoints for the package <em>2 cached, 0 ran</em></li>
+        <li>Listed every role this key can take <em>only ci-deployer used</em></li>
+        <li class="rout">Checked 37 other buckets for reads <em>none</em></li>
+        <li class="more-l more-signal">+38 routine checks, all clean</li>
+        <li class="more-l more-all">and 37 more like this one, all clean</li>
+      </ul></details>
+    <details class="tq"><summary><span class="tq-q">How much data left?</span><span class="tq-a unk" id="trace-unk">Don’t know yet</span></summary>
+      <ul class="tsteps">
+        <li class="pend" id="trace-flow">Waiting for VPC flow logs <em>back at 02:25</em></li>
+      </ul></details>
+  </div>
+</dialog>
+
+<!-- brief -->
+<dialog id="brief" aria-labelledby="h-brief">
+  <div class="dlg-h"><h2 id="h-brief">30-second brief</h2><button type="button" class="btn ghost sm" id="brief-play" hidden><span>Read it to me</span></button><button type="button" class="x" data-close>Close</button></div>
+  <dl class="dlg-b brief" id="brief-body"></dl>
+</dialog>
+
+<!-- help (prototype chrome, Russian) -->
+<dialog id="help" aria-labelledby="h-help" lang="ru">
+  <div class="dlg-h"><h2 id="h-help">Что попробовать</h2><button type="button" class="x" data-close>Закрыть</button></div>
+  <div class="dlg-b">
+    <ol>
+      <li>Нажми на любую подчёркнутую фразу в истории: рядом откроется то, на чём она держится.</li>
+      <li>В карточке «Needs you» удержи кнопку Hold to approve. Или выбери другой вариант, откажись, либо просто дождись, пока выйдет время.</li>
+      <li>После решения подожди несколько секунд: придут flow-логи, и «не знаю» в истории станет фактом.</li>
+      <li>Наведи на события таймлайна и нажми на любое. Справа от линии now лежит прогноз.</li>
+      <li>Выбери фразу «No other endpoint ran the package» и оспорь её через Dispute.</li>
+      <li>Открой команды строкой внизу или клавишами ⌘K: трассировка, брифинг, новая проверка.</li>
+      <li>Отмени любое действие в «Done without you» и посмотри, что спросит агент.</li>
+      <li>Кнопки времени наверху переключают состояния экрана. «Morning» показывает режим отчёта.</li>
+    </ol>
+    <p>Это набросок концепции, а не готовый дизайн. Сценарий, имена и цифры выдуманы.</p>
+  </div>
+</dialog>
+
+<!-- evidence templates -->
+<template id="ev-c1"><span class="ev-type">Observed, 2 events</span><h3>Why I say this</h3><ul class="evs"><li><time>02:14:07</time><span><b>MBP-DKATZ</b> npm install fast-json-patcher@2.1.4, started by codeagent, task “overnight-refactor”</span></li><li><time>02:14:09</time><span><b>registry</b> first published 3 days ago, 41 downloads</span></li></ul><p>The name is one letter away from a popular JSON library.</p></template>
+<template id="ev-c2"><span class="ev-type">Observed, 3 events</span><h3>Why I say this</h3><ul class="evs"><li><time>02:14:31</time><span><b>MBP-DKATZ</b> read ~/.aws/credentials by node (postinstall.js)</span></li><li><time>02:14:44</time><span><b>MBP-DKATZ</b> POST cdn-pkg-stats[.]io:443, 4.1 KB</span></li><li><time>02:14:44</time><span><b>whois</b> domain registered 3 days ago</span></li></ul></template>
+<template id="ev-c3"><span class="ev-type">Observed, 2 events</span><h3>Why I say this</h3><ul class="evs"><li><time>02:16:10</time><span><b>aws-sts</b> AssumeRole ci-deployer with key AKIA…7Q2F (dkatz), from 203.0.113.41, AS64501</span></li><li><time>02:16:10</time><span><b>identity</b> 0 of 1,902 sign-ins in 90 days came from this network</span></li></ul></template>
+<template id="ev-c4"><span class="ev-type">Inferred</span><h3>Why I think so</h3><p>212 calls in 140 seconds, evenly spaced, in the exact order of a known enumeration toolkit. A person at a console doesn’t work this fast.</p><h3>What would change my mind</h3><p>Pauses, typos, or a console user agent.</p></template>
+<template id="ev-c5"><span class="ev-type unk">Unknown until 02:25</span><h3>What I know</h3><p>The download started at 02:19:22. I disabled the key at 02:19:48, but the open session kept working until 02:20:10.</p><h3>What’s missing</h3><p>Byte counts from VPC flow logs. They arrive about 5 minutes late. I’ll replace this sentence at 02:25 and tell you if the number changes the picture.</p></template>
+<template id="ev-c5b"><span class="ev-type ok">Observed, changed at 02:25</span><h3>Why I say this</h3><ul class="evs"><li><time>02:25:01</time><span><b>vpc-flow</b> customer-exports-prod to 203.0.113.41: 338.2 MB between 02:19:22 and 02:20:10</span></li><li><time>02:25:01</time><span><b>s3</b> 2 objects from exports/2026-03: accounts-a.parquet, accounts-b.parquet</span></li></ul><p>Before 02:25 this sentence read “about 340 MB may have left”. The estimate held.</p></template>
+<template id="ev-c6"><span class="ev-type">Observed, fleet sweep</span><h3>Why I say this</h3><table><tr><td>Endpoints queried</td><td>1,240</td></tr><tr><td>Package in cache</td><td>2</td></tr><tr><td>Package executed</td><td>0</td></tr><tr><td>Quarantined</td><td>2</td></tr></table><p>In cache on MBP-RSHAH and LNX-BUILD-07. Swept between 02:19:55 and 02:20:20.</p></template>
+<template id="ev-c6b"><span class="ev-type ok">Corrected by Igor, 02:21</span><h3>What changed</h3><p>I treated a cached package as harmless. On a build server the cache runs on schedule, so LNX-BUILD-07 would have executed it at 03:00.</p><ul class="evs"><li><time>02:21:40</time><span><b>LNX-BUILD-07</b> purged fast-json-patcher@2.1.4 from cache</span></li><li><time>02:21:41</time><span><b>LNX-BUILD-07</b> nightly-build 03:00 will fetch clean packages</span></li></ul><div class="reply"><i class="ag"></i><div>You’re right. Here’s what I did with it:<ul><li>1 claim rewritten</li><li>1 action added: cache purged. <button type="button" class="lnk" data-row="cache">See it</button></li><li>1 thing I’ll remember: build servers run cached packages on schedule</li></ul></div></div></template>
+<template id="ev-c7"><span class="ev-type hum">Confirmed by a person</span><h3>Slack, direct message</h3><ul class="evs"><li><time>02:20:40</time><span><b>Agent</b> Did you start a download from customer-exports-prod just now?</span></li><li><time>02:20:52</time><span><b>Daniel</b> No. I’m in bed. My coding agent is running a refactor overnight.</span></li></ul></template>
+<template id="ev-c8"><span class="ev-type ok">Observed, 4 events</span><h3>Why I say this</h3><ul class="evs"><li><time>02:21:14</time><span><b>igor</b> approved revoke-sessions ci-deployer, held 1.2 s</span></li><li><time>02:21:15</time><span><b>iam</b> deny tokens issued before 02:21:14</span></li><li><time>02:21:19</time><span><b>s3</b> DENIED ListObjectsV2 by session …7Q2F</span></li><li><time>02:21:24</time><span><b>s3</b> DENIED GetObject, 14 calls</span></li></ul><p>3 pipelines lost their sessions too. They restart on their own; deploy-prod is back at about 02:30.</p></template>
+<template id="ev-c9"><span class="ev-type ok">Observed, 3 events</span><h3>Why I say this</h3><ul class="evs nt"><li><span><b>iam</b> deny ci-deployer when the source is 203.0.113.0/24</span></li><li><span><b>s3</b> DENIED ListObjectsV2 by session …7Q2F</span></li><li><span><b>s3</b> DENIED GetObject, 6 calls</span></li></ul><p>This holds only while they keep this address. The session itself is still valid until 02:59.</p></template>
+<template id="ev-merge"><span class="ev-type">About this step</span><h3>37 alerts became one case</h3><table><tr><td>Endpoint</td><td>9</td></tr><tr><td>Identity</td><td>6</td></tr><tr><td>Cloud</td><td>22</td></tr></table><p>Why they belong together: the same key, the same six-minute window, the same source network.</p></template>
+<template id="ev-actions"><span class="ev-type">About this step</span><h3>Three steps I took alone</h3><ul class="evs"><li><time>02:19:48</time><span>disabled key AKIA…7Q2F</span></li><li><time>02:19:50</time><span>quarantined the package on 3 hosts</span></li><li><time>02:19:52</time><span>blocked cdn-pkg-stats[.]io</span></li></ul><h3>What lets me</h3><p>Policy “reversible containment”: I may act alone when a step can be undone in one click and touches one person or one host group. Set by Noa, SOC lead, on 3 November.</p></template>
+<template id="ev-listing"><span class="ev-type">Observed, 3 events</span><h3>They’re lining up the next download</h3><ul class="evs"><li><time>02:20:14</time><span><b>s3</b> ListObjectsV2 exports/2026-04/ by session …7Q2F</span></li><li><time>02:20:31</time><span><b>s3</b> ListObjectsV2 exports/2026-07/</span></li><li><time>02:21:06</time><span><b>s3</b> ListObjectsV2 exports/2026-10/</span></li></ul><p>So far: 212 objects, 4.1 GB, seven months of customer exports.</p></template>
+<template id="ev-forecast"><span class="ev-type fc">Forecast, not fact</span><h3>Why I expect it</h3><p>Last time the download began 22 seconds after the listing ended. At this pace the listing ends near 02:22:15, so I expect the next download around 02:22:38.</p><h3>How wrong I can be</h3><p>On forecasts like this I’ve been off by up to 40 seconds.</p></template>
+<template id="ev-prevented"><span class="ev-type ok">Never happened</span><h3>What you prevented</h3><p>The listing covered 212 objects, 4.1 GB. The session was cut before the first of them was read.</p><ul class="evs"><li><time>02:21:19</time><span><b>s3</b> DENIED ListObjectsV2 by session …7Q2F</span></li><li><time>02:21:24</time><span><b>s3</b> DENIED GetObject, 14 calls</span></li></ul></template>
+<template id="ev-fallback"><span class="ev-type fc">Staged</span><h3>What I do if nobody answers</h3><p>When the download starts, I block the attacker’s network on ci-deployer and page Omer.</p><h3>Why only that</h3><p>Blocking a network can be undone in one click. Revoking sessions interrupts production, and policy keeps that decision with a person.</p></template>
+<template id="ev-flagged"><div class="reply"><i class="ag"></i><div>Noted. I’ve marked this claim as disputed by Igor and I’m re-checking it now. If anything moves, the sentence will change and show what it used to say.</div></div></template>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+function pad(n){return (n<10?'0':'')+n}
+function mmss(s){return pad(Math.floor(s/60))+':'+pad(s%60)}
+function hms(t){var s=2*3600+14*60+t;return pad(Math.floor(s/3600))+':'+pad(Math.floor(s%3600/60))+':'+pad(s%60)}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+
+/* ---------- state ---------- */
+var S, timers=[];
+function fresh(){return {decision:'pending',opt:'revoke',execOpt:null,doneOpt:null,left:88,sel:'c4',flow:false,dis:false,disputing:false,flag:{},undo:{},open:null,extra:null,morning:false,learn:null,signed:{},reason:null,wopen:null}}
+function after(ms,fn){var t=setTimeout(fn,ms);timers.push(t);return t}
+function clearTimers(){timers.forEach(clearTimeout);timers=[]}
+function phase(){
+  if(S.morning) return 'morning';
+  if(S.decision==='executing') return 'exec';
+  if(S.decision==='done') return S.doneOpt==='revoke'?'contained':'holding';
+  if(S.decision==='expired') return 'holding';
+  return 'hot';
+}
+function say(t){$('#say').textContent=t}
+
+/* ---------- verdict band ---------- */
+function renderBand(){
+  var p=phase(),h,t,l='',v='',s='';
+  if(p==='hot'){
+    h='Active attack. Partly contained.';
+    if(S.decision==='declined'){t='You declined the revoke. The attacker’s session stays live until 02:59, and I’m watching every call it makes.';l='Session valid until';v='02:59';}
+    else if(S.decision==='snoozed'){t='Waiting for the prod deploy before the revoke. I’ll ask again at 02:27, or the moment the download starts.';l='Asking again at';v='02:27';}
+    else{t='A stolen AWS key is disabled, but the attacker still holds a live session and is lining up 4.1 GB of customer exports. One decision needs you.';l='Next attacker move in';v=mmss(S.left);s='forecast: second download';}
+  }else if(p==='exec'){
+    h='Cutting the attacker off.';t='Approved by Igor at 02:21:14. '+(S.execOpt==='revoke'?'Revoking every session of ci-deployer.':'Blocking the attacker’s network on ci-deployer.');
+  }else if(p==='contained'){
+    if(S.flow){h='Contained. 338 MB got out.';t='Flow logs confirm it: 338 MB of customer exports left before I disabled the key, and nothing after. The case can move to clean-up.';l='First event to containment';v='7:12';s='minutes';}
+    else{h='Contained.';t='The attacker lost access at 02:21:19, before the second download started. One thing is still unknown: how much left in the first one.';l='Flow logs due';v='02:25';}
+  }else if(p==='holding'){
+    h='Active attack. Holding.';
+    if(S.decision==='expired'){t='Nobody answered before the download started, so I blocked the attacker’s network, the one step policy lets me take alone. Omer is paged. The full revoke still needs a person.';l='Holding since';v='02:22';}
+    else{t='The attacker’s network is blocked on ci-deployer, so their calls fail for now. That holds until they switch address. The full revoke is staged.';l='Holding since';v='02:21';}
+  }else{
+    var n=Object.keys(S.signed).length;
+    h=n>=5?'Closed and signed off.':'Closed. Contained in 7 minutes.';
+    t='338 MB of customer exports left the bucket; nothing else was touched. '+(n>=5?'Everything is signed. The report goes out at 09:30.':'Five drafts wait for your sign-off.');l='Closed at';v='02:31';
+  }
+  document.body.setAttribute('data-phase',p);
+  $('#band-e').textContent={hot:'Active attack · INC-48213',exec:'Responding',contained:'Contained',holding:'Holding the line',morning:'Case closed'}[p];
+  $('#band-h').textContent=h;$('#band-p').textContent=t;$('#band-l').textContent=l;$('#band-v').textContent=v;$('#band-s').textContent=s;
+}
+
+/* ---------- story + evidence ---------- */
+function renderStory(){
+  var st=$('#story');
+  st.setAttribute('data-flow',S.flow?'1':'0');
+  st.setAttribute('data-dis',S.dis?'1':'0');
+  var res='';
+  if(S.decision==='done') res=S.doneOpt; else if(S.decision==='expired') res='source';
+  if(S.morning) res='revoke';
+  st.setAttribute('data-res',res);
+  $$('.claim',st).forEach(function(c){
+    var id=c.getAttribute('data-c');
+    c.setAttribute('role','button');c.setAttribute('tabindex','0');
+    c.setAttribute('aria-pressed',String(id===S.sel));
+    c.classList.toggle('flagged',!!S.flag[id]);
+  });
+  var n=7+(res?1:0), up='02:21:04', extra='';
+  if(S.flow){up='02:25:01';extra=', 1 changed';}
+  else if(res){up=S.decision==='expired'?'02:22:39':'02:21:20';extra=', 1 new';}
+  if(S.dis&&!S.flow){extra=extra?extra+', 1 corrected':', 1 corrected';}
+  $('#story-meta').textContent=n+' claims from 37 alerts. Updated '+up+extra;
+}
+function evKey(){
+  var s=S.sel;
+  if(s==='c5'&&S.flow) return 'c5b';
+  if(s==='c6'&&S.dis) return 'c6b';
+  if(s==='forecast'&&(phase()==='contained'||phase()==='morning')) return 'prevented';
+  return s;
+}
+function renderEvidence(){
+  var box=$('#evidence'),key=evKey(),t=document.getElementById('ev-'+key);
+  box.innerHTML='';
+  if(!t){box.innerHTML='<p>Select any underlined claim to see what it rests on.</p>';return;}
+  box.appendChild(t.content.cloneNode(true));
+  var isClaim=/^c\d$/.test(S.sel);
+  if(!isClaim) return;
+  if(S.flag[S.sel]){box.appendChild(document.getElementById('ev-flagged').content.cloneNode(true));return;}
+  if(S.sel==='c6'&&S.dis) return;
+  if(S.disputing){
+    var d=document.createElement('div');d.className='dispute';
+    d.innerHTML='<label for="dis-t">What do you know that I don’t?</label><textarea id="dis-t" placeholder="Tell me in your own words"></textarea>'
+      +(S.sel==='c6'?'<p class="hint">Example: <button type="button" class="lnk" data-act="dis-fill">LNX-BUILD-07 is a build server. Whatever sits in its cache runs at the 03:00 nightly build.</button></p>':'<p class="hint">I’ll re-check the claim and show what changed.</p>')
+      +'<div class="acts"><button type="button" class="btn sm" data-act="dis-send"><span>Send correction</span></button><button type="button" class="btn ghost sm" data-act="dis-cancel"><span>Cancel</span></button></div>';
+    box.appendChild(d);
+    var ta=$('#dis-t');if(ta) ta.focus();
+  }else{
+    var a=document.createElement('div');a.className='ev-acts';
+    a.innerHTML='<button type="button" class="btn ghost sm" data-act="dis-open"><span>Dispute this</span></button>';
+    box.appendChild(a);
+  }
+}
+function select(id,fromTimeline){
+  if(id==='decision'){var dc=$('#dc');dc.scrollIntoView({block:'nearest',behavior:'smooth'});dc.classList.remove('nudge');void dc.offsetWidth;dc.classList.add('nudge');return;}
+  S.sel=id;S.disputing=false;
+  renderStory();renderEvidence();renderTimeline();
+  if(fromTimeline){var r=$('#evidence').getBoundingClientRect();if(r.top<60||r.bottom>window.innerHeight-70) $('#evidence').scrollIntoView({block:'nearest',behavior:'smooth'});}
+}
+
+/* ---------- timeline ---------- */
+function X(t){if(t<=300) return t*26/300; if(t<=480) return 26+(t-300)*50/180; return 76+(t-480)*24/240}
+function tipCls(x){return x<26?' tl-l':(x>66?' tl-r':'')}
+function evHtml(o){
+  var x=o.x!=null?o.x:X(o.t), on=o.sel&&o.sel===S.sel?' on':'';
+  var lab=o.label?'<span class="lab '+(o.lp||'a')+' '+(o.la||'c')+(o.struck?' struck':'')+'">'+esc(o.label)+'</span>':'';
+  var tip='<span class="tip">'+(o.time?'<b>'+o.time+'</b>':'')+esc(o.tip)+'</span>';
+  var aria=(o.time?o.time+' ':'')+o.tip;
+  if(o.bar){
+    var w=Math.max(1.2,X(o.t2)-x);
+    return '<button type="button" class="b '+(o.cls||'')+on+tipCls(x+w/2)+'" style="left:'+x.toFixed(2)+'%;width:'+w.toFixed(2)+'%" data-sel="'+(o.sel||'')+'" data-tl="1" aria-label="'+esc(aria)+'">'+lab+tip+'</button>';
+  }
+  return '<button type="button" class="e '+o.cls+on+tipCls(x)+'" style="left:'+x.toFixed(2)+'%" data-sel="'+(o.sel||'')+'" data-tl="1" aria-label="'+esc(aria)+'"><i></i>'+(o.n?'<em class="n">'+o.n+'</em>':'')+lab+tip+'</button>';
+}
+function renderTimeline(){
+  var p=phase(), exp=S.decision==='expired', src=(S.decision==='done'&&S.doneOpt==='source');
+  var now={hot:430,exec:436,contained:S.flow?664:441,holding:exp?520:438}[p];
+  var cut=p==='contained'||p==='morning'?439:(src?436:(exp?518:(now||439)));
+  var A=[],G=[],P=[];
+  A.push({t:7,cls:'dot',sel:'c1',time:'02:14:07',tip:'Package installed by the coding agent'});
+  A.push({t:31,cls:'dot',sel:'c2',time:'02:14:31',tip:'AWS key read, then sent out'});
+  A.push({t:130,cls:'dot',sel:'c3',time:'02:16:10',tip:'Role ci-deployer taken from an unknown network'});
+  A.push({bar:1,t:160,t2:300,sel:'c4',label:'212 API calls',time:'02:16:40',tip:'Listing buckets: 212 calls in 140 s'});
+  A.push({bar:1,t:322,t2:370,sel:'c5',label:'download 1',time:'02:19:22',tip:'First download, about 340 MB'});
+  A.push({bar:1,t:370,t2:cut,cls:'light',sel:'listing',label:'listing 4.1 GB',time:'02:20:10',tip:'Lining up the next download: 4.1 GB'});
+  if(p==='contained'||p==='morning') A.push({bar:1,t:518,t2:630,cls:'ghost',sel:'forecast',label:'prevented',struck:1,tip:'Never happened: the 4.1 GB download was cut off before it started'});
+  else if(p==='holding') A.push({bar:1,t:exp?524:518,t2:630,cls:'ghost',sel:'forecast',label:'blocked for now',tip:'Blocked while the attacker keeps this address'});
+  else A.push({bar:1,t:518,t2:630,cls:'ghost',sel:'forecast',label:'next download',time:'~02:22:38',tip:'Forecast: second download, 4.1 GB'});
+
+  G.push({t:330,cls:'dia',sel:'merge',time:'02:19:30',tip:'Merged 37 alerts into one case'});
+  G.push({t:348,cls:'dia',n:3,sel:'actions',label:'3 safe actions',lp:'u',time:'02:19:48',tip:'Key disabled, package quarantined, domain blocked'});
+  G.push({t:365,cls:'dia ask',sel:'decision',label:p==='hot'?'asks you':'',time:'02:20:05',tip:'Asked for your decision'});
+  G.push({t:380,cls:'dia',sel:'c6',time:'02:20:20',tip:'Swept 1,240 endpoints'});
+  G.push({t:400,cls:'dia',sel:'c7',time:'02:20:40',tip:'Asked Daniel on Slack'});
+  if(p==='hot'){
+    G.push({x:X(now)+2.4,cls:'dia ghost',sel:'decision',label:'waits for you',la:'l',tip:'Staged: revoke all sessions. Runs the moment you approve'});
+    if(S.decision==='pending') G.push({t:518,cls:'dia ghost',sel:'fallback',label:'fallback if you’re silent',lp:'u',time:'02:22:38',tip:'Block the attacker’s network, page Omer'});
+  }
+  if(p==='exec') G.push({x:X(now)+2.4,cls:'dia ghost',sel:'decision',label:'running',la:'l',tip:'Running now'});
+  if(p==='contained'||p==='morning') G.push({t:439,cls:'dia',sel:'c8',label:'revoked',time:'02:21:19',tip:'Every session of ci-deployer revoked'});
+  if(src){G.push({t:436,cls:'dia',sel:'c9',label:'network blocked',la:'r',time:'02:21:16',tip:'Attacker’s network blocked on ci-deployer'});G.push({x:X(now)+2.4,cls:'dia ghost',sel:'decision',label:'full revoke waits',lp:'u',la:'l',tip:'Staged: revoke all sessions'});}
+  if(exp){G.push({t:518,cls:'dia',sel:'c9',label:'network blocked',la:'r',time:'02:22:38',tip:'Fallback: attacker’s network blocked, Omer paged'});G.push({x:X(now)+2.4,cls:'dia ghost',sel:'decision',label:'full revoke waits',lp:'u',la:'l',tip:'Staged: revoke all sessions'});}
+  if(S.flow||p==='morning') G.push({t:660,cls:'dia',sel:'c5',label:'338 MB confirmed',la:'r',time:'02:25:01',tip:'Flow logs in: 338 MB left, nothing after'});
+  else G.push({t:660,cls:'dia ghost',sel:'c5',label:'flow logs',la:'r',time:'02:25',tip:'Flow logs arrive: I’ll know how much left'});
+
+  P.push({t:412,cls:'ring',sel:'c7',label:'Daniel: “not me”',lp:'u',la:'r',time:'02:20:52',tip:'Daniel replied on Slack'});
+  var approved=(p==='exec'||p==='contained'||p==='morning'||src);
+  P.push({t:422,cls:'you',label:approved?'':'you',time:'02:21:02',tip:'You opened the case'});
+  if(approved) P.push({t:434,cls:'you',sel:p==='holding'?'c9':'c8',label:'you approve',la:'l',time:'02:21:14',tip:'You approved'+(src?' the narrow option':' the revoke')});
+
+  var html='<div class="tl-names"><span>Attacker</span><span>Agents</span><span>People</span></div><div class="tl-in">';
+  if(now!=null){var nx=X(now).toFixed(2);html+='<div class="tl-future" style="left:'+nx+'%"></div><div class="tl-now" style="left:'+nx+'%"><span>now '+hms(now)+'</span></div>';}
+  html+='<div class="track">'+A.map(evHtml).join('')+'</div><div class="track">'+G.map(evHtml).join('')+'</div><div class="track">'+P.map(evHtml).join('')+'</div>';
+  html+='<div class="axis">'+[[0,'02:14'],[120,'02:16'],[300,'02:19'],[360,'02:20'],[420,'02:21'],[480,'02:22'],[660,'02:25']].map(function(a){return '<span style="left:'+X(a[0]).toFixed(2)+'%">'+a[1]+'</span>'}).join('')+'</div></div>';
+  $('#tl').innerHTML=html;
+  var sc=$('.tl-scroll');
+  if(sc.scrollWidth>sc.clientWidth+8&&S.tlPhase!==p){S.tlPhase=p;var nl=$('.tl-now',sc);sc.scrollLeft=nl?Math.max(0,nl.offsetLeft+90-sc.clientWidth*0.6):0;}
+}
+
+/* ---------- decision card ---------- */
+var IMP={
+  revoke:{stop:'Yes, right away',breaks:'3 pipelines, prod deploy at 62%',undo:'They restart alone, ~10 min',label:'Hold to approve',hold:true,hint:'Wide impact, so approving takes a deliberate hold.'},
+  source:{stop:'Only until they switch address',breaks:'Nothing',undo:'Remove the block in one click',label:'Approve',hold:false,hint:'Reversible in one click, so one click approves it.'},
+  wait:{stop:'No',breaks:'Nothing',undo:'Leaked data can’t be pulled back',label:'Wait, ask me at 02:27',hold:false,hint:'Nothing happens now. I keep watching the download.'}
+};
+var STEPS={
+  revoke:['Revoking sessions issued before 02:21:14','Confirming the attacker’s session is rejected','Restarting 3 pipelines and posting in #deploys'],
+  source:['Adding a deny rule for 203.0.113.0/24 on ci-deployer','Confirming the attacker’s calls are rejected','Watching for a new source address']
+};
+var REPLY={
+  expected:'You’re saying this is expected. That conflicts with 3 things I’ve seen, so I’ll keep the key disabled and show you the conflict before I close anything.',
+  broad:'OK. I can block only the attacker’s network and keep the full revoke ready in case they switch address. Say the word.',
+  timing:'OK. I’ll ask again when the prod deploy finishes, in about 6 minutes, or sooner if the download starts.',
+  mine:'It’s yours. I’ll stop acting on this role, keep watching the download and note that you took over at 02:21.'
+};
+function renderDecision(){
+  var dc=$('#dc'),d=IMP[S.opt],p=phase();
+  $('#needs').hidden=S.morning;$('#wrap').hidden=!S.morning;
+  dc.setAttribute('data-state',S.decision);dc.setAttribute('data-opt',S.doneOpt||'');
+  $('#imp-stop').textContent=d.stop;$('#imp-breaks').textContent=d.breaks;$('#imp-undo').textContent=d.undo;
+  var pr=$('#dc-primary');$('span',pr).textContent=d.label;pr.classList.toggle('nohold',!d.hold);$('#dc-hint').textContent=d.hint;
+  $$('input[name="opt"]').forEach(function(r){r.checked=(r.value===S.opt)});
+  $('#dc-clock').textContent=mmss(S.left);
+  var open=(S.decision==='pending'||S.decision==='expired'||S.decision==='snoozed'||(S.decision==='done'&&S.doneOpt==='source'))?1:0;
+  var n=$('#needs-n');n.textContent=open;n.classList.toggle('zero',!open);
+  $('#calm').hidden=!(p==='contained');
+  if(S.decision==='done'){
+    var rv=S.doneOpt==='revoke';
+    $('#done-h').textContent=rv?'Attacker’s session rejected at 02:21:19':'Attacker’s network blocked at 02:21:16';
+    $('#done-p').textContent=rv?'The 4.1 GB download never started. 3 pipelines are restarting and will be back in about 9 minutes. I posted a note in #deploys.':'Their calls fail now. This holds only until they change address.';
+    $('#done-source').hidden=rv;
+    $('#learn').hidden=!rv||S.learn!==null;
+    var lr=$('#learn-reply');lr.hidden=!rv||S.learn===null;
+    lr.textContent=S.learn==='yes'?'Rule saved: revoke sessions without asking when no production pipeline is affected. You can change it in Autonomy settings.':'OK, I’ll keep asking every time.';
+  }
+  if(S.decision==='declined'){
+    $$('#reasons button').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-reason')===S.reason))});
+    var rr=$('#reason-reply');rr.hidden=!S.reason;if(S.reason) $('span',rr).textContent=REPLY[S.reason];
+  }
+}
+function runSteps(){
+  var list=$('#dc-steps');list.innerHTML='';
+  STEPS[S.execOpt].forEach(function(t,i){
+    var li=document.createElement('li');li.textContent=t;list.appendChild(li);
+    after(750*(i+1),function(){li.classList.add('ok')});
+  });
+  after(750*3+650,finish);
+}
+function finish(){
+  S.decision='done';S.doneOpt=S.execOpt;
+  if(S.doneOpt==='revoke'){
+    S.sel='c8';S.disputing=false;
+    say('Sessions revoked. The attacker’s calls are failing. Waiting on flow logs for the last unknown.');
+    after(7000,arriveFlow);
+  }else{
+    S.sel='c9';S.disputing=false;
+    say('Network blocked. I’m watching for a new source address.');
+  }
+  renderAll();
+}
+function arriveFlow(){
+  if(S.flow||phase()!=='contained') return;
+  S.flow=true;
+  if(S.sel==='c8'||S.sel==='c5') S.sel='c5';
+  say('Flow logs are in: 338 MB left before the key was disabled, nothing after. I changed one sentence in the story.');
+  renderAll();
+}
+function commit(which){
+  if(which==='wait'){S.decision='snoozed';say('Waiting for the prod deploy. I’ll ask again at 02:27.');renderAll();return;}
+  S.decision='executing';S.execOpt=which;
+  say(which==='revoke'?'Revoking every session of ci-deployer…':'Blocking the attacker’s network on ci-deployer…');
+  renderAll();runSteps();
+}
+function expire(){
+  S.decision='expired';S.left=0;S.sel='c9';S.disputing=false;
+  say('Nobody answered when the download started. I blocked the attacker’s network and paged Omer.');
+  renderAll();
+}
+function bindHold(btn,cb){
+  var t=null,label=$('span',btn),orig='';
+  function hold(){return !btn.classList.contains('nohold')}
+  function start(){if(t) return;orig=label.textContent;btn.classList.add('holding');label.textContent='Keep holding…';t=setTimeout(function(){t=null;btn.classList.remove('holding');label.textContent=orig;cb()},1200)}
+  function end(){if(!t) return;clearTimeout(t);t=null;btn.classList.remove('holding');label.textContent=orig}
+  btn.addEventListener('pointerdown',function(e){if(!hold()) return;e.preventDefault();btn.focus();start()});
+  ['pointerup','pointerleave','pointercancel','blur'].forEach(function(n){btn.addEventListener(n,end)});
+  btn.addEventListener('keydown',function(e){if(hold()&&(e.key===' '||e.key==='Enter')){e.preventDefault();if(!e.repeat) start()}});
+  btn.addEventListener('keyup',function(e){if(e.key===' '||e.key==='Enter') end()});
+  btn.addEventListener('click',function(e){if(hold()){e.preventDefault();return;}cb()});
+  btn.addEventListener('contextmenu',function(e){if(hold()) e.preventDefault()});
+}
+
+/* ---------- rail lists ---------- */
+var DONE=[
+  {id:'key',time:'02:19:48',h:'Disabled Daniel’s access key',d:'Key AKIA…7Q2F can’t sign new requests. Daniel can’t deploy until he has a new one; I opened that request for him.',q:'Re-enable the key? The attacker has a copy of it.',yes:'Re-enable anyway',back:'Disable it again',said:'Key re-enabled by Igor. I’m watching it and will ask before I touch it again.'},
+  {id:'pkg',time:'02:19:50',h:'Quarantined the package on 3 hosts',d:'MBP-DKATZ, MBP-RSHAH and LNX-BUILD-07. The files are moved, not deleted.',q:'Restore the package on all 3 hosts? It will run again on the next install.',yes:'Restore anyway',back:'Quarantine again',said:'Package restored by Igor on 3 hosts. I’ll flag it if it runs.'},
+  {id:'dom',time:'02:19:52',h:'Blocked cdn-pkg-stats[.]io',d:'DNS and firewall, company-wide. No other device tried to reach it in the last 30 days.',q:'Unblock the domain for the whole company?',yes:'Unblock anyway',back:'Block it again',said:'Domain unblocked by Igor. I’ll tell you if anything talks to it.'}
+];
+var CACHE={id:'cache',time:'02:21:40',h:'Purged the package cache on LNX-BUILD-07',d:'After your correction. The 03:00 nightly build will fetch clean packages.',q:'Put the cached package back? The 03:00 build would run it.',yes:'Put it back anyway',back:'Purge again',said:'Cache restored by Igor. The 03:00 build will run the package unless someone stops it.'};
+function rowHtml(o,kind){
+  var open=S.open===o.id,u=S.undo[o.id],tick=kind==='blind'?'<span class="tick q">?</span>':(u==='undone'?'<span class="tick x">↺</span>':'<span class="tick">✓</span>');
+  var h='<li><button type="button" class="row'+(u==='undone'?' undone':'')+'" data-row="'+o.id+'" aria-expanded="'+open+'">'+tick+'<span class="h">'+esc(o.h)+'</span>'+(o.time?'<time>'+o.time+'</time>':'<span class="side">'+(o.side||'')+'</span>')+'</button>';
+  if(open){
+    h+='<div class="more"><p>'+esc(o.d)+'</p>';
+    if(kind==='done'){
+      if(u==='ask') h+='<p class="q">'+esc(o.q)+'</p><div class="acts"><button type="button" class="btn sm" data-undo-yes="'+o.id+'"><span>'+esc(o.yes)+'</span></button><button type="button" class="btn ghost sm" data-undo-no="'+o.id+'"><span>Keep it</span></button></div>';
+      else if(u==='undone') h+='<p>Undone by Igor at 02:21.</p><div class="acts"><button type="button" class="btn ghost sm" data-undo-back="'+o.id+'"><span>'+esc(o.back)+'</span></button></div>';
+      else h+='<div class="acts"><button type="button" class="btn ghost sm" data-undo="'+o.id+'"><span>Undo</span></button></div>';
+    }
+    h+='</div>';
+  }
+  return h+'</li>';
+}
+function doneItems(){var a=DONE.slice();if(S.dis) a.push(CACHE);return a}
+function renderRail(){
+  var items=doneItems();
+  $('#done-list').innerHTML=items.map(function(o){return rowHtml(o,'done')}).join('');
+  var un=items.filter(function(o){return S.undo[o.id]==='undone'}).length;
+  $('#done-meta').textContent=items.length+' steps'+(un?', '+un+' undone':', all reversible');
+  var ch=[
+    {id:'sweep',h:S.dis?'1,240 endpoints: ran nowhere else, 1 fixed':'1,240 endpoints: the package ran nowhere else',d:S.dis?'2 had it cached. MBP-RSHAH is quarantined. LNX-BUILD-07 would have run it at 03:00; its cache is purged.':'2 had it cached, MBP-RSHAH and LNX-BUILD-07. Neither executed it. Both are quarantined.'},
+    {id:'roles',h:'No other role was taken with this key',d:'The key can take 3 roles. Only ci-deployer was used; read-metrics and docs-publisher show no activity.'}
+  ];
+  if(S.extra==='done') ch.push({id:'buckets',h:'37 other buckets: no reads',d:'Checked at your request. No List or Get calls from this session on any other bucket.',side:'you asked'});
+  if(S.flow) ch.push({id:'flow',h:'338 MB left S3, confirmed by flow logs',d:'2 objects from exports/2026-03, between 02:19:22 and 02:20:10. Nothing after the key was disabled.',side:'02:25'});
+  $('#check-list').innerHTML=ch.map(function(o){return rowHtml(o,'check')}).join('');
+  var bl=[];
+  if(!S.flow) bl.push({id:'bytes',h:'How much data left S3',d:'Flow logs arrive about 5 minutes late. I’ll know at 02:25 and I’ll change the story then.',side:'02:25'});
+  if(S.extra==='run') bl.push({id:'bk',h:'Reads on 37 other buckets',d:'Checking now, at your request.',side:'checking'});
+  bl.push({id:'other',h:'Use of the key outside AWS',d:'I can’t see other providers. If Daniel reused this key anywhere else, only he can tell us. I asked him.',side:'out of reach'});
+  $('#blind-list').innerHTML=bl.map(function(o){return rowHtml(o,'blind')}).join('');
+  if(S.morning) renderWrap();
+}
+var DRAFTS=[
+  {id:'report',h:'Incident report',d:'Two pages: timeline, what left, what I did, what you decided.',yes:'Sign off'},
+  {id:'ticket',h:'Ticket for IT',d:'Move developer AWS keys off laptops into short-lived sessions. 14 laptops still hold long-lived keys.',yes:'Sign off'},
+  {id:'msg',h:'Note to Daniel and #engineering',d:'What happened, what to check, how to get a new key.',yes:'Sign off'},
+  {id:'det',h:'New detection',d:'Flag coding agents that install packages younger than 7 days. It would have fired at 02:14:07, five minutes before the first alert that mattered.',yes:'Sign off'},
+  {id:'auto',h:'Autonomy rule',d:'Let me revoke sessions without asking when no production pipeline is affected. You approved this 4 times out of 4.',yes:'Make it a rule'}
+];
+function renderWrap(){
+  $('#wrap-list').innerHTML=DRAFTS.map(function(o){
+    var open=S.wopen===o.id,sg=S.signed[o.id];
+    var h='<li><button type="button" class="row" data-wrow="'+o.id+'" aria-expanded="'+open+'">'+(sg?'<span class="tick">✓</span>':'<span class="tick x">○</span>')+'<span class="h">'+esc(o.h)+'</span><span class="side">'+(sg?'signed':'draft')+'</span></button>';
+    if(open) h+='<div class="more"><p>'+esc(o.d)+'</p>'+(sg?'<p class="signed">Signed by Igor, 09:02</p><div class="acts"><button type="button" class="btn ghost sm" data-unsign="'+o.id+'"><span>Take it back</span></button></div>':'<div class="acts"><button type="button" class="btn sm" data-sign="'+o.id+'"><span>'+o.yes+'</span></button></div>')+'</div>';
+    return h+'</li>';
+  }).join('');
+  var left=DRAFTS.length-Object.keys(S.signed).length,n=$('#wrap-n');
+  n.textContent=left;n.classList.toggle('zero',!left);
+}
+function renderTeam(){
+  var p=phase(),t='idle';
+  if(S.extra==='run') t='checking 37 buckets';
+  else if(p==='exec') t=S.execOpt==='revoke'?'revoking sessions':'blocking network';
+  else if(!S.flow&&p!=='morning') t='reading flow logs';
+  $('#cloud-s').textContent=t;$('#cloud').classList.toggle('live',t!=='idle');
+  var u=$('#trace-unk'),f=$('#trace-flow');
+  if(S.flow||S.morning){u.textContent='338 MB';u.classList.remove('unk');f.className='';f.innerHTML='Read VPC flow logs for the bucket <em>338 MB, 2 objects</em>';}
+  else{u.textContent='Don’t know yet';u.classList.add('unk');f.className='pend';f.innerHTML='Waiting for VPC flow logs <em>back at 02:25</em>';}
+}
+function renderProto(){
+  var p=phase(),cur='open';
+  if(p==='morning') cur='morning'; else if(p==='contained') cur=S.flow?'contained':'decided'; else if(p==='exec') cur='decided';
+  $$('[data-jump]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-jump')===cur))});
+}
+function renderAll(){renderBand();renderStory();renderEvidence();renderTimeline();renderDecision();renderRail();renderTeam();renderProto()}
+
+function jump(to){
+  clearTimers();S=fresh();
+  if(to==='open'){say('Cloud agent is reading flow logs. An answer on the data volume is due at 02:25.');}
+  if(to==='decided'||to==='contained'||to==='morning'){S.decision='done';S.doneOpt='revoke';S.execOpt='revoke';S.sel='c8';}
+  if(to==='decided'){say('Sessions revoked. The attacker’s calls are failing. Waiting on flow logs for the last unknown.');after(7000,arriveFlow);}
+  if(to==='contained'){S.flow=true;S.sel='c5';say('Flow logs are in: 338 MB left before the key was disabled, nothing after.');}
+  if(to==='morning'){S.flow=true;S.morning=true;S.sel='c5';S.wopen='report';say('Good morning. Five drafts are ready. The report goes out once you sign it.');}
+  renderAll();window.scrollTo(0,0);
+}
+
+/* ---------- commands ---------- */
+var CMDS=[
+  {id:'why',k:'Ask',t:'Why do you think the attacker is automated?'},
+  {id:'buckets',k:'Investigate',t:'Check whether any other bucket was read'},
+  {id:'dispute',k:'Dispute',t:'“No other endpoint ran the package” is wrong'},
+  {id:'trace',k:'View',t:'Open the investigation trace'},
+  {id:'brief',k:'View',t:'Brief me in 30 seconds'}
+];
+var palIdx=0,palShown=CMDS;
+function renderPal(){
+  var q=$('#pal-in').value.trim().toLowerCase();
+  palShown=CMDS.filter(function(c){return !q||(c.t+' '+c.k).toLowerCase().indexOf(q)>=0});
+  if(palIdx>=palShown.length) palIdx=0;
+  $('#pal-list').innerHTML=palShown.map(function(c,i){return '<li role="presentation"><button type="button" role="option" aria-selected="'+(i===palIdx)+'" data-cmd="'+c.id+'"><span class="k">'+c.k+'</span><span>'+esc(c.t)+'</span></button></li>'}).join('');
+  $('#pal-empty').hidden=palShown.length>0;
+}
+function runCmd(id){
+  $('#palette').close();
+  if(id==='why'){select('c4');$('#evidence').scrollIntoView({block:'center',behavior:'smooth'});}
+  if(id==='trace'){$('#trace').showModal();}
+  if(id==='brief'){openBrief();}
+  if(id==='dispute'){
+    if(S.dis){select('c6');say('That claim is already corrected.');}
+    else{S.sel='c6';S.disputing=true;renderStory();renderTimeline();renderEvidence();$('#evidence').scrollIntoView({block:'center',behavior:'smooth'});}
+  }
+  if(id==='buckets'){
+    if(S.extra){say(S.extra==='done'?'Already checked: no reads in 37 other buckets.':'Still checking the other buckets…');return;}
+    S.extra='run';S.open='bk';say('Cloud agent is checking 37 other buckets for reads…');renderRail();renderTeam();
+    after(2600,function(){S.extra='done';S.open='buckets';say('No reads in 37 other buckets. Added to “Checked and clear”.');renderRail();renderTeam();});
+  }
+}
+function openBrief(){
+  var p=phase(),rows=[['What happened','Daniel’s coding agent installed a poisoned npm package. It stole his AWS key. Someone used the key to take the role ci-deployer and started downloading customer exports.'],['What I did','Disabled the key, quarantined the package on 3 hosts and blocked the domain it talked to.']];
+  if(p==='hot') rows.push(['What I need','Your OK to revoke every session of ci-deployer. It stops them now and interrupts 3 pipelines, including the prod deploy.']);
+  else if(p==='holding') rows.push(['What I need','Still your OK for the full revoke. The network block only holds until they change address.']);
+  else rows.push(['What you decided','To revoke every session of ci-deployer. The attacker lost access at 02:21:19.']);
+  rows.push(S.flow?['What we now know','338 MB of customer exports left before the key was disabled. Nothing after.']:['What I don’t know','How much of the first download got out. I’ll know at 02:25.']);
+  $('#brief-body').innerHTML=rows.map(function(r){return '<dt>'+r[0]+'</dt><dd>'+esc(r[1])+'</dd>'}).join('');
+  $('#brief').showModal();
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',function(e){
+  var t=e.target.closest('button,[data-c]');if(!t) return;
+  var a;
+  if(t.hasAttribute('data-c')){select(t.getAttribute('data-c'));return;}
+  if((a=t.getAttribute('data-jump'))){jump(a);return;}
+  if(t.hasAttribute('data-sel')){a=t.getAttribute('data-sel');if(a) select(a,t.hasAttribute('data-tl'));return;}
+  if((a=t.getAttribute('data-open'))){if(a==='palette'){palIdx=0;$('#pal-in').value='';renderPal();}document.getElementById(a).showModal();return;}
+  if(t.hasAttribute('data-close')){t.closest('dialog').close();return;}
+  if((a=t.getAttribute('data-cmd'))){runCmd(a);return;}
+  if((a=t.getAttribute('data-trace'))){$('#trace-body').setAttribute('data-mode',a);$$('[data-trace]').forEach(function(x){x.setAttribute('aria-pressed',String(x===t))});$('#trace-count').textContent=a==='signal'?'8 of 61 steps shown':'All 61 steps, routine ones grouped';if(a==='all') $$('.tq').forEach(function(d){d.open=true});return;}
+  if((a=t.getAttribute('data-reason'))){S.reason=a;renderDecision();return;}
+  if((a=t.getAttribute('data-row'))){
+    if(t.classList.contains('lnk')){S.open=a;renderRail();var r=$('[data-row="'+a+'"].row');if(r){r.scrollIntoView({block:'center',behavior:'smooth'});r.focus({preventScroll:true});}return;}
+    S.open=S.open===a?null:a;if(S.undo[a]==='ask') delete S.undo[a];renderRail();var b=$('.row[data-row="'+a+'"]');if(b) b.focus();return;
+  }
+  if((a=t.getAttribute('data-undo'))){S.undo[a]='ask';renderRail();return;}
+  if((a=t.getAttribute('data-undo-no'))){delete S.undo[a];renderRail();return;}
+  if((a=t.getAttribute('data-undo-yes'))){S.undo[a]='undone';var it=doneItems().filter(function(o){return o.id===a})[0];say(it.said);renderRail();return;}
+  if((a=t.getAttribute('data-undo-back'))){delete S.undo[a];say('Done again. Back to where we were.');renderRail();return;}
+  if((a=t.getAttribute('data-wrow'))){S.wopen=S.wopen===a?null:a;renderWrap();var w=$('[data-wrow="'+a+'"]');if(w) w.focus();return;}
+  if((a=t.getAttribute('data-sign'))){S.signed[a]=1;var i=DRAFTS.map(function(d){return d.id}).indexOf(a);var nx=DRAFTS.filter(function(d,j){return j>i&&!S.signed[d.id]})[0]||DRAFTS.filter(function(d){return !S.signed[d.id]})[0];S.wopen=nx?nx.id:a;say(nx?'Signed. Next draft: '+nx.h.toLowerCase()+'.':'All five are signed. The report goes out at 09:30.');renderWrap();renderBand();return;}
+  if((a=t.getAttribute('data-unsign'))){delete S.signed[a];renderWrap();renderBand();return;}
+  a=t.getAttribute('data-act');
+  if(a==='decline'){S.decision='declined';S.reason=null;say('Declined. Tell me why and I’ll adjust.');renderAll();}
+  else if(a==='reopen'){S.decision='pending';if(S.left<20) S.left=60;say('The request is open again.');renderAll();}
+  else if(a==='unblock'){S.decision='pending';S.doneOpt=null;S.left=60;S.sel='listing';say('Block removed at 02:21:40. The attacker’s calls work again, so I’m asking you once more.');renderAll();}
+  else if(a==='rule-yes'||a==='rule-no'){S.learn=a==='rule-yes'?'yes':'no';renderDecision();}
+  else if(a==='dis-open'){S.disputing=true;renderEvidence();}
+  else if(a==='dis-cancel'){S.disputing=false;renderEvidence();}
+  else if(a==='dis-fill'){var ta=$('#dis-t');ta.value=t.textContent;ta.focus();}
+  else if(a==='dis-send'){
+    var txt=$('#dis-t').value.trim();if(!txt){$('#dis-t').focus();return;}
+    S.disputing=false;
+    if(S.sel==='c6'){S.dis=true;S.open='cache';say('You’re right. I rewrote one claim and purged the cache on LNX-BUILD-07.');renderAll();}
+    else{S.flag[S.sel]=1;say('Marked as disputed by Igor. Re-checking that claim now.');renderStory();renderEvidence();}
+  }
+});
+document.addEventListener('keydown',function(e){
+  var c=e.target.closest&&e.target.closest('.claim');
+  if(c&&(e.key==='Enter'||e.key===' ')){e.preventDefault();select(c.getAttribute('data-c'));return;}
+  var typing=/^(INPUT|TEXTAREA)$/.test(e.target.tagName);
+  if((e.key==='k'||e.key==='K')&&(e.metaKey||e.ctrlKey)){e.preventDefault();if(!$('#palette').open){palIdx=0;$('#pal-in').value='';renderPal();$('#palette').showModal();}return;}
+  if(e.key==='/'&&!typing&&!document.querySelector('dialog[open]')){e.preventDefault();palIdx=0;$('#pal-in').value='';renderPal();$('#palette').showModal();}
+});
+$('#pal-in').addEventListener('input',function(){palIdx=0;renderPal()});
+$('#pal-in').addEventListener('keydown',function(e){
+  if(e.key==='ArrowDown'){e.preventDefault();palIdx=Math.min(palShown.length-1,palIdx+1);renderPal();}
+  else if(e.key==='ArrowUp'){e.preventDefault();palIdx=Math.max(0,palIdx-1);renderPal();}
+  else if(e.key==='Enter'){e.preventDefault();if(palShown[palIdx]) runCmd(palShown[palIdx].id);}
+});
+$$('dialog').forEach(function(d){d.addEventListener('click',function(e){if(e.target===d) d.close()})});
+$$('input[name="opt"]').forEach(function(r){r.addEventListener('change',function(){S.opt=r.value;renderDecision()})});
+bindHold($('#dc-primary'),function(){commit(S.opt)});
+bindHold($('#dc-full'),function(){commit('revoke')});
+bindHold($('#dc-full2'),function(){commit('revoke')});
+
+/* read the brief aloud where the browser can */
+(function(){
+  var b=$('#brief-play');
+  try{
+    if(!('speechSynthesis' in window)||!window.SpeechSynthesisUtterance) return;
+    b.hidden=false;
+    b.addEventListener('click',function(){
+      try{
+        if(window.speechSynthesis.speaking){window.speechSynthesis.cancel();$('span',b).textContent='Read it to me';return;}
+        var u=new SpeechSynthesisUtterance($$('#brief-body dd').map(function(d){return d.textContent}).join(' '));
+        u.lang='en-US';u.rate=1.05;u.onend=function(){$('span',b).textContent='Read it to me'};
+        window.speechSynthesis.speak(u);$('span',b).textContent='Stop';
+      }catch(err){b.hidden=true}
+    });
+    $('#brief').addEventListener('close',function(){try{window.speechSynthesis.cancel()}catch(err){}$('span',b).textContent='Read it to me'});
+  }catch(err){}
+})();
+
+/* cursor aura */
+(function(){
+  var sp=$('#spot');if(!sp||!window.matchMedia||matchMedia('(prefers-reduced-motion:reduce)').matches||matchMedia('(pointer:coarse)').matches) return;
+  var tx=0,ty=0,x=0,y=0,run=false;
+  function loop(){x+=(tx-x)*.08;y+=(ty-y)*.08;sp.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,0)';if(Math.abs(tx-x)+Math.abs(ty-y)>.5) requestAnimationFrame(loop);else run=false}
+  window.addEventListener('pointermove',function(e){tx=e.clientX;ty=e.clientY;if(!sp.classList.contains('on')){x=tx;y=ty;sp.classList.add('on')}if(!run){run=true;requestAnimationFrame(loop)}},{passive:true});
+  document.addEventListener('pointerleave',function(){sp.classList.remove('on')});
+})();
+
+/* the attacker's clock */
+setInterval(function(){
+  if(S.decision!=='pending'||document.querySelector('dialog[open]')) return;
+  if(S.left>0) S.left--;
+  $('#band-v').textContent=mmss(S.left);$('#dc-clock').textContent=mmss(S.left);
+  if(S.left<=0) expire();
+},1000);
+
+jump('open');
+})();
+</script>
+</body>
+</html>
