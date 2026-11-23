@@ -620,7 +620,7 @@ body{background:radial-gradient(1200px 560px at 50% -140px,rgba(46,86,200,.26),t
         </div>
 
         <div data-show="expired">
-          <p class="receipt"><b>No answer when the download started</b>At 02:22:38 I blocked the attacker’s network, the one step policy lets me take alone. Their calls fail for now. Omer is paged. The full revoke still needs a person.</p>
+          <p class="receipt"><b>No answer in time</b>At 02:22:38 I blocked the attacker’s network, the one step policy lets me take alone. Their calls fail for now. Omer is paged. The full revoke still needs a person.</p>
           <div class="acts"><button type="button" class="btn hold" id="dc-full2"><span>Hold to approve the full revoke</span></button></div>
           <p class="dc-hint">The request stays open for whoever picks it up.</p>
         </div>
@@ -744,7 +744,7 @@ body{background:radial-gradient(1200px 560px at 50% -140px,rgba(46,86,200,.26),t
 <template id="ev-listing"><span class="ev-type">Observed, 3 events</span><h3>They’re lining up the next download</h3><ul class="evs"><li><time>02:20:14</time><span><b>s3</b> ListObjectsV2 exports/2026-04/ by session …7Q2F</span></li><li><time>02:20:31</time><span><b>s3</b> ListObjectsV2 exports/2026-07/</span></li><li><time>02:21:06</time><span><b>s3</b> ListObjectsV2 exports/2026-10/</span></li></ul><p>So far: 212 objects, 4.1 GB, seven months of customer exports.</p></template>
 <template id="ev-forecast"><span class="ev-type fc">Forecast, not fact</span><h3>Why I expect it</h3><p>Last time the download began 22 seconds after the listing ended. At this pace the listing ends near 02:22:15, so I expect the next download around 02:22:38.</p><h3>How wrong I can be</h3><p>On forecasts like this I’ve been off by up to 40 seconds.</p></template>
 <template id="ev-prevented"><span class="ev-type ok">Never happened</span><h3>What you prevented</h3><p>The listing covered 212 objects, 4.1 GB. The session was cut before the first of them was read.</p><ul class="evs"><li><time>02:21:19</time><span><b>s3</b> DENIED ListObjectsV2 by session …7Q2F</span></li><li><time>02:21:24</time><span><b>s3</b> DENIED GetObject, 14 calls</span></li></ul></template>
-<template id="ev-fallback"><span class="ev-type fc">Staged</span><h3>What I do if nobody answers</h3><p>When the download starts, I block the attacker’s network on ci-deployer and page Omer.</p><h3>Why only that</h3><p>Blocking a network can be undone in one click. Revoking sessions interrupts production, and policy keeps that decision with a person.</p></template>
+<template id="ev-fallback"><span class="ev-type fc">Staged</span><h3>What I do if nobody answers</h3><p>When the timer runs out, I block the attacker’s network on ci-deployer and page Omer.</p><h3>Why only that</h3><p>Blocking a network can be undone in one click. Revoking sessions interrupts production, and policy keeps that decision with a person.</p></template>
 <template id="ev-flagged"><div class="reply"><i class="ag"></i><div>Noted. I’ve marked this claim as disputed by Igor and I’m re-checking it now. If anything moves, the sentence will change and show what it used to say.</div></div></template>
 
 <script>
@@ -788,7 +788,7 @@ function renderBand(){
     else{h='Contained.';t='The attacker lost access at 02:21:19, before the second download started. One thing is still unknown: how much left in the first one.';l='Flow logs due';v='02:25';}
   }else if(p==='holding'){
     h='Active attack. Holding.';
-    if(S.decision==='expired'){t='Nobody answered before the download started, so I blocked the attacker’s network, the one step policy lets me take alone. Omer is paged. The full revoke still needs a person.';l='Holding since';v='02:22';}
+    if(S.decision==='expired'){t='Nobody answered in time, so I blocked the attacker’s network, the one step policy lets me take alone. Omer is paged. The full revoke still needs a person.';l='Holding since';v='02:22';}
     else{t='The attacker’s network is blocked on ci-deployer, so their calls fail for now. That holds until they switch address. The full revoke is staged.';l='Holding since';v='02:21';}
   }else{
     var n=Object.keys(S.signed).length;
@@ -997,7 +997,7 @@ function commit(which){
 }
 function expire(){
   S.decision='expired';S.left=0;S.sel='c9';S.disputing=false;
-  say('Nobody answered when the download started. I blocked the attacker’s network and paged Omer.');
+  say('Nobody answered in time. I blocked the attacker’s network and paged Omer.');
   renderAll();
 }
 function bindHold(btn,cb){
