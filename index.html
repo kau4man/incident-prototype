@@ -498,6 +498,7 @@ body{background:radial-gradient(1200px 560px at 50% -140px,rgba(46,86,200,.26),t
 .band{width:calc(100% - 64px);max-width:1416px;margin:16px auto;border-radius:12px;padding:26px 32px 28px;padding-inline:32px}
 .band h1 .h-time{white-space:nowrap;font-weight:400;opacity:.55;font-variant-numeric:tabular-nums}
 .band h1 .h-time::before{content:"·";margin:0 .3em}
+.band h1 .h-time.pre::before{content:none}
 @media (max-width:1180px){.band{width:calc(100% - 32px);padding-inline:24px}}
 @media (max-width:860px){.band{padding:20px;border-radius:12px}}
 </style>
@@ -775,7 +776,7 @@ function say(t){$('#say').textContent=t}
 
 /* ---------- verdict band ---------- */
 function renderBand(){
-  var p=phase(),h,t,l='',v='',s='';
+  var p=phase(),h,t,l='',v='',s='',pre='';
   if(p==='hot'){
     h='Active attack. Partly contained.';
     if(S.decision==='declined'){t='You declined the revoke. The attacker’s session stays live until 02:59, and I’m watching every call it makes.';l='Session valid until';v='02:59';}
@@ -788,8 +789,8 @@ function renderBand(){
     else{h='Contained.';t='The attacker lost access at 02:21:19, before the second download started. One thing is still unknown: how much left in the first one.';l='Flow logs due';v='02:25';}
   }else if(p==='holding'){
     h='Active attack. Holding.';
-    if(S.decision==='expired'){t='Nobody answered in time, so I blocked the attacker’s network, the one step policy lets me take alone. Omer is paged. The full revoke still needs a person.';l='Holding since';v='02:22';}
-    else{t='The attacker’s network is blocked on ci-deployer, so their calls fail for now. That holds until they switch address. The full revoke is staged.';l='Holding since';v='02:21';}
+    if(S.decision==='expired'){t='Nobody answered in time, so I blocked the attacker’s network, the one step policy lets me take alone. Omer is paged. The full revoke still needs a person.';l='Holding since';v='02:22';pre='since ';}
+    else{t='The attacker’s network is blocked on ci-deployer, so their calls fail for now. That holds until they switch address. The full revoke is staged.';l='Holding since';v='02:21';pre='since ';}
   }else{
     var n=Object.keys(S.signed).length;
     h=n>=5?'Closed and signed off.':'Closed. Contained in 7 minutes.';
@@ -799,7 +800,7 @@ function renderBand(){
   $('#band-e').textContent={hot:'Active attack · INC-48213',exec:'Responding',contained:'Contained',holding:'Holding the line',morning:'Case closed'}[p];
   var cd=(p==='hot'&&S.decision!=='declined'&&S.decision!=='snoozed');
   var bh=$('#band-h');bh.textContent=h.replace(/\.$/,'');
-  if(!cd&&v){var ht=document.createElement('span');ht.className='h-time';ht.title=l;ht.textContent=v+(s?' '+s:'');bh.appendChild(document.createElement('wbr'));bh.appendChild(ht);}
+  if(!cd&&v){var ht=document.createElement('span');ht.className='h-time'+(pre?' pre':'');ht.title=l;ht.textContent=pre+v+(s?' '+s:'');bh.appendChild(document.createTextNode(pre?' ':''));if(!pre)bh.appendChild(document.createElement('wbr'));bh.appendChild(ht);}
   $('#band-p').textContent=t;
   $('.band-aside').hidden=!cd;$('.band-aside').classList.toggle('overdue',cd&&S.left<=0);
   $('#band-l').textContent=cd?l:'';$('#band-v').textContent=cd?v:'';$('#band-s').textContent=cd?s:'';
