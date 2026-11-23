@@ -568,7 +568,7 @@ body{background:radial-gradient(1200px 560px at 50% -140px,rgba(46,86,200,.26),t
         <div class="sec-h dc-head"><h2 id="h-needs">Needs you</h2><span class="count" id="needs-n">1</span></div>
         <div class="dc-top"><span><i class="ag"></i>Cloud agent <span data-show="pending" data-inline>asks</span></span>
           <span class="dc-clock" data-show="expired" data-inline><span id="dc-esc-l">security lead paged in </span><b id="dc-esc">01:00</b></span>
-          <span class="dc-clock" data-show="pending" data-inline><span id="dc-clock-l">your call within </span><b id="dc-clock">01:28</b></span></div>
+          <span class="dc-clock" data-show="pending" data-inline><span id="dc-clock-l">your call within </span><b id="dc-clock">00:08</b></span></div>
         <h3 class="dc-title">Revoke all active sessions of role <code>ci-deployer</code><span data-show="pending" data-inline>?</span></h3>
 
         <div data-show="pending">
@@ -765,7 +765,7 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
 
 /* ---------- state ---------- */
 var S, timers=[];
-function fresh(){return {decision:'pending',opt:'revoke',execOpt:null,doneOpt:null,left:88,esc:60,escalated:false,sel:'c4',flow:false,dis:false,disputing:false,flag:{},undo:{},open:null,extra:null,morning:false,learn:null,signed:{},reason:null,wopen:null}}
+function fresh(){return {decision:'pending',opt:'revoke',execOpt:null,doneOpt:null,left:8,esc:60,escalated:false,sel:'c4',flow:false,dis:false,disputing:false,flag:{},undo:{},open:null,extra:null,morning:false,learn:null,signed:{},reason:null,wopen:null}}
 function after(ms,fn){var t=setTimeout(fn,ms);timers.push(t);return t}
 function clearTimers(){timers.forEach(clearTimeout);timers=[]}
 function phase(){
