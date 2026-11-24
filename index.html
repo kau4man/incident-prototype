@@ -569,7 +569,7 @@ body{background:radial-gradient(1200px 560px at 50% -140px,rgba(46,86,200,.26),t
       <article class="dc" id="dc" data-state="pending">
         <div class="sec-h dc-head"><h2 id="h-needs">Needs you</h2><span class="count" id="needs-n">1</span></div>
         <div class="dc-top"><span><i class="ag"></i>Cloud agent <span data-show="pending" data-inline>asks</span></span>
-          <span class="dc-clock" data-show="expired" data-inline><span id="dc-esc-l">security lead paged in </span><b id="dc-esc">01:00</b></span>
+          <span class="dc-clock" data-show="expired" data-inline><span id="dc-esc-l">Omer’s call within </span><b id="dc-esc">01:00</b></span>
           <span class="dc-clock" data-show="pending" data-inline><span id="dc-clock-l">your call within </span><b id="dc-clock">00:20</b></span></div>
         <h3 class="dc-title">Revoke all active sessions of role <code>ci-deployer</code><span data-show="pending" data-inline>?</span></h3>
 
@@ -760,7 +760,7 @@ var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelect
 function pad(n){return (n<10?'0':'')+n}
 function mmss(s){return pad(Math.floor(s/60))+':'+pad(s%60)}
 var GRACE=3, ESC=60; /* demo seconds until the page escalates past Omer */ /* seconds 'Acting now…' shows before the block lands */
-function paintEsc(){var e=S.escalated;$('#dc-esc-l').textContent=e?'security lead paged':'security lead paged in ';var b=$('#dc-esc');b.hidden=e;b.textContent=e?'':mmss(S.esc);$('#dc-exp-hint').textContent=e?'Omer and the security lead are paged. I’ll re-block any new address until their session expires at 02:59.':'The request stays open for whoever picks it up.';}
+function paintEsc(){var e=S.escalated;$('#dc-esc-l').textContent=e?'security lead paged':'Omer’s call within ';var b=$('#dc-esc');b.hidden=e;b.textContent=e?'':mmss(S.esc);$('#dc-exp-hint').textContent=e?'Omer and the security lead are paged. I’ll re-block any new address until their session expires at 02:59.':'The request stays open for whoever picks it up.';}
 function paintDcClock(){var o=S.left<=0;$('#dc-clock-l').textContent=o?'acting now…':'your call within ';var b=$('#dc-clock');b.hidden=o;b.textContent=o?'':mmss(S.left);}
 function hms(t){var s=2*3600+14*60+t;return pad(Math.floor(s/3600))+':'+pad(Math.floor(s%3600/60))+':'+pad(s%60)}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
@@ -796,7 +796,7 @@ function renderBand(){
     h='Active attack. Holding.';
     nodot=true;pre='since ';hl='Holding since';
     if(S.decision==='expired'){hv='02:22';
-      if(!S.escalated){t='Nobody answered in time, so I blocked the attacker’s network, the one step policy lets me take alone. Omer is paged. The full revoke still needs a person.';l='Security lead paged in';v=mmss(S.esc);s='If Omer doesn’t answer';}
+      if(!S.escalated){t='Nobody answered in time, so I blocked the attacker’s network, the one step policy lets me take alone. Omer is paged. The full revoke still needs a person.';l='Omer’s call within';v=mmss(S.esc);s='Then I page the security lead';}
       else{t='Omer didn’t answer either, so I paged the security lead. I’ll re-block any new address until their session expires at 02:59. The full revoke still needs a person.';}}
     else{hv='02:21';t='The attacker’s network is blocked on ci-deployer, so their calls fail for now. That holds until they switch address, and their session expires at 02:59 anyway. The full revoke is staged.';}
   }else{
