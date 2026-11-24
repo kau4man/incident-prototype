@@ -625,7 +625,7 @@ body{background:radial-gradient(1200px 560px at 50% -140px,rgba(46,86,200,.26),t
         </div>
 
         <div data-show="expired">
-          <p class="receipt"><b>No answer in time</b>At 02:22:38 I blocked the attacker’s network, the one step policy lets me take alone. Their calls fail for now. Omer is paged. The full revoke still needs a person.</p>
+          <p class="receipt"><b>No answer in time</b>At 02:22:15 I blocked the attacker’s network, the one step policy lets me take alone. Their calls fail for now. Omer is paged. The full revoke still needs a person.</p>
           <div class="acts"><button type="button" class="btn hold" id="dc-full2"><span>Hold to approve the full revoke</span></button></div>
           <p class="dc-hint" id="dc-exp-hint">The request stays open for whoever picks it up.</p>
         </div>
@@ -831,7 +831,7 @@ function renderStory(){
   });
   var n=7+(res?1:0), up='02:21:04', extra='';
   if(S.flow){up='02:25:01';extra=', 1 changed';}
-  else if(res){up=S.decision==='expired'?'02:22:39':'02:21:20';extra=', 1 new';}
+  else if(res){up=S.decision==='expired'?'02:22:16':'02:21:20';extra=', 1 new';}
   if(S.dis&&!S.flow){extra=extra?extra+', 1 corrected':', 1 corrected';}
   $('#story-meta').textContent=n+' claims from 37 alerts. Updated '+up+extra;
 }
@@ -887,8 +887,8 @@ function evHtml(o){
 }
 function renderTimeline(){
   var p=phase(), exp=S.decision==='expired', src=(S.decision==='done'&&S.doneOpt==='source');
-  var now={hot:430,exec:436,contained:S.flow?664:441,holding:exp?520:438}[p];
-  var cut=p==='contained'||p==='morning'?439:(src?436:(exp?518:(now||439)));
+  var now={hot:430,exec:436,contained:S.flow?664:441,holding:exp?(S.escalated?580:500):438}[p];
+  var cut=p==='contained'||p==='morning'?439:(src?436:(exp?495:(now||439)));
   var A=[],G=[],P=[];
   A.push({t:7,cls:'dot',sel:'c1',time:'02:14:07',tip:'Package installed by the coding agent'});
   A.push({t:31,cls:'dot',sel:'c2',time:'02:14:31',tip:'AWS key read, then sent out'});
@@ -907,12 +907,13 @@ function renderTimeline(){
   G.push({t:400,cls:'dia',sel:'c7',time:'02:20:40',tip:'Asked Daniel on Slack'});
   if(p==='hot'){
     G.push({x:X(now)+2.4,cls:'dia ghost',sel:'decision',label:'waits for you',la:'l',tip:'Staged: revoke all sessions. Runs the moment you approve'});
-    if(S.decision==='pending') G.push({t:518,cls:'dia ghost',sel:'fallback',label:'fallback if you’re silent',lp:'u',time:'02:22:38',tip:'Block the attacker’s network, page Omer'});
+    if(S.decision==='pending') G.push({t:495,cls:'dia ghost',sel:'fallback',label:'your call by 02:22:15',lp:'u',time:'02:22:15',tip:'If you’re silent by then: block the attacker’s network, page Omer'});
   }
   if(p==='exec') G.push({x:X(now)+2.4,cls:'dia ghost',sel:'decision',label:'running',la:'l',tip:'Running now'});
   if(p==='contained'||p==='morning') G.push({t:439,cls:'dia',sel:'c8',label:'revoked',time:'02:21:19',tip:'Every session of ci-deployer revoked'});
   if(src){G.push({t:436,cls:'dia',sel:'c9',label:'network blocked',la:'r',time:'02:21:16',tip:'Attacker’s network blocked on ci-deployer'});G.push({x:X(now)+2.4,cls:'dia ghost',sel:'decision',label:'full revoke waits',lp:'u',la:'l',tip:'Staged: revoke all sessions'});}
-  if(exp){G.push({t:518,cls:'dia',sel:'c9',label:'network blocked',la:'r',time:'02:22:38',tip:'Fallback: attacker’s network blocked, Omer paged'});G.push({x:X(now)+2.4,cls:'dia ghost',sel:'decision',label:'full revoke waits',lp:'u',la:'l',tip:'Staged: revoke all sessions'});}
+  if(exp){G.push({t:495,cls:'dia',sel:'c9',label:'network blocked',la:'r',time:'02:22:15',tip:'Fallback: attacker’s network blocked, Omer paged'});G.push({x:X(now)+1.6,cls:'dia ghost',sel:'decision',label:'',tip:'Staged: full revoke, waits for a person'});}
+  if(exp) G.push({t:560,cls:'dia'+(S.escalated?'':' ghost'),sel:'fallback',label:S.escalated?'security lead paged':'pages security lead',lp:'u',time:'02:23:20',tip:S.escalated?'Omer didn’t answer, so I paged the security lead':'If Omer doesn’t answer: page the security lead'});
   if(S.flow||p==='morning') G.push({t:660,cls:'dia',sel:'c5',label:'338 MB confirmed',la:'r',time:'02:25:01',tip:'Flow logs in: 338 MB left, nothing after'});
   else G.push({t:660,cls:'dia ghost',sel:'c5',label:'flow logs',la:'r',time:'02:25',tip:'Flow logs arrive: I’ll know how much left'});
 
